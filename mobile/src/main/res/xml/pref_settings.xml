@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/title_input_device">
+        <!-- Input Device Number -->
+        <ListPreference
+            android:defaultValue="@string/default_input_device"
+            android:entries="@array/input_devices"
+            android:entryValues="@array/input_devices"
+            android:key="@string/key_input_device"
+            android:title="@string/title_select_input_device"/>
+        <!-- Input Device Ratio -->
+        <EditTextPreference
+            android:defaultValue="@string/default_input_device_ratio_y"
+            android:dialogMessage="@string/note_input_device_ratio"
+            android:inputType="number"
+            android:key="@string/key_input_device_ratio_x"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_input_device_ratio_x"/>
+        <EditTextPreference
+            android:defaultValue="@string/default_input_device_ratio_y"
+            android:dialogMessage="@string/note_input_device_ratio"
+            android:inputType="number"
+            android:key="@string/key_input_device_ratio_y"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_input_device_ratio_y"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/title_cursor">
+        <!-- Cursor Speed -->
+        <EditTextPreference
+            android:defaultValue="@string/default_cursor_speed"
+            android:dialogMessage="@string/note_cursor_speed"
+            android:inputType="number"
+            android:key="@string/key_cursor_speed"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_cursor_speed"/>
+    </PreferenceCategory>
+
+    <!-- Information -->
+    <PreferenceCategory
+        android:title="@string/title_information">
+    <!-- About -->
+    <Preference
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:key="@string/key_about"
+        android:title="@string/title_about"/>
+    </PreferenceCategory>
+</PreferenceScreen>

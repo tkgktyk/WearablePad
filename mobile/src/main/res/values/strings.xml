@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Wearable Pad</string>
+
+    <!-- Settings -->
+    <string name="current_s1">Current: %1$s</string>
+    <string name="unit_percent">%</string>
+
+    <!-- Input Device -->
+    <string name="title_input_device">Input Device</string>
+    <string name="title_select_input_device">Select</string>
+    <!-- Input Device Ratio -->
+    <string name="title_input_device_ratio_x">Ratio X</string>
+    <string name="title_input_device_ratio_y">Ratio Y</string>
+    <string name="note_input_device_ratio">The unit is percent(%).</string>
+
+    <!-- Cursor -->
+    <string name="title_cursor">Cursor</string>
+    <!-- Cursor Speed -->
+    <string name="title_cursor_speed">Speed</string>
+    <string name="note_cursor_speed">The unit is percent(%).</string>
+
+    <!-- Information -->
+    <string name="title_information">Information</string>
+    <!-- About -->
+    <string name="title_about">About</string>
+</resources>

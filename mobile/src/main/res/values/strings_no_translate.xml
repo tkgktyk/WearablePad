@@ -1,0 +1,29 @@
+<resources>
+    <!-- Input Device -->
+    <string name="key_input_device" translatable="false">key_input_device_number</string>
+    <string-array name="input_devices" translatable="false">
+        <item>/dev/input/event0</item>
+        <item>/dev/input/event1</item>
+        <item>/dev/input/event2</item>
+        <item>/dev/input/event3</item>
+        <item>/dev/input/event4</item>
+        <item>/dev/input/event5</item>
+        <item>/dev/input/event6</item>
+        <item>/dev/input/event7</item>
+        <item>/dev/input/event8</item>
+        <item>/dev/input/event9</item>
+    </string-array>
+    <string name="default_input_device" translatable="false">/dev/input/event2</string>
+    <!-- Input Device Ratio -->
+    <string name="key_input_device_ratio_x">key_input_device_ratio_x</string>
+    <string name="default_input_device_ratio_x">200</string>
+    <string name="key_input_device_ratio_y">key_input_device_ratio_y</string>
+    <string name="default_input_device_ratio_y">200</string>
+
+    <!-- Cursor Speed -->
+    <string name="key_cursor_speed">key_cursor_speed</string>
+    <string name="default_cursor_speed">100</string>
+
+    <!-- About -->
+    <string name="key_about">key_about</string>
+</resources>
