@@ -1,28 +1,26 @@
 # Wearable Pad
 *****
-# Control your Android phone from paired Android Wear
-There are some apps to control your PC from Android Wear. 
-However I couldn't find apps to control Android phone from Android wear. 
+## Control Android phone/tablet from Wear
+There are some apps to control your PC from Android Wear via Android phone/tablet.
+However I couldn't find apps to control Android phone from Android wear.
 This is just a challenge make that.
 
-# Solution
+## Solution
 Android has Input SubSystem, /dev/input/eventX the same as Linux, processing user input from input devices including touch screen.
 We can emulate user input by injecting input event to Input SubSystem, but normal user has no permissions and that is protected by SELinux.
 Therefore we need **root permission** and **changing SELinux policy**.
 
-## Changing SELinux policy
+### Changing SELinux policy
 Use `setenforce` or `supolicy` command to do that.
 Refer to
+[stackoverflow:Q27496968](http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx, "stackoverflow:Q27496968").
 
-    http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx.
+## Download
+Here is a shared apk:
+[Wearable Pad APK on my Google Drive](https://drive.google.com/file/d/0B3ROJmhB_rAydkZCNzRSTEdnQmc/view?usp=sharing, "Wearable Pad APK on my Google Drive")
 
-# Download
-Here is an shared apk:
-
-    https://drive.google.com/file/d/0B3ROJmhB_rAydkZCNzRSTEdnQmc/view?usp=sharing
-
-# License
-Copyright (C) 2015 Takagi Katsuyuki
+## License
+Copyright 2015 Takagi Katsuyuki
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. 
