@@ -5,6 +5,8 @@ There are some apps to control your PC from Android Wear via Android phone/table
 However I couldn't find apps to control Android phone from Android wear.
 This is just a challenge make that.
 
+[Movie on Youtube](https://youtu.be/G9Vo8Ck-Mno)
+
 ## Solution
 Android has Input SubSystem, /dev/input/eventX the same as Linux, processing user input from input devices including touch screen.
 We can emulate user input by injecting input event to Input SubSystem, but normal user has no permissions and that is protected by SELinux.
@@ -12,12 +14,20 @@ Therefore we need **root permission** and **changing SELinux policy**.
 
 ### Changing SELinux policy
 Use `setenforce` or `supolicy` command to do that.
-Refer to
-[stackoverflow:Q27496968](http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx, "stackoverflow:Q27496968").
+I refered to
+[stackoverflow:Q27496968](http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx).
+
+### Select touch screen from eventX
+Android device has some /dev/input/eventX, X is number from 0, so you need to know which X links to your touch screen.
+The number of touch screen is depending on device.
+The following page is helpful for X:
+[LMT Launcher's thread on XDA](http://forum.xda-developers.com/showthread.php?t=1330150)
+
+For Nexus4, touch screen is /dev/input/event2, and RatioX = 200%, and RatioY = 200%.
 
 ## Download
-Here is a shared apk:
-[Wearable Pad APK on my Google Drive](https://drive.google.com/file/d/0B3ROJmhB_rAydkZCNzRSTEdnQmc/view?usp=sharing, "Wearable Pad APK on my Google Drive")
+Here is a apk:
+[Wearable Pad APK on my Google Drive](https://drive.google.com/file/d/0B3ROJmhB_rAydkZCNzRSTEdnQmc/view?usp=sharing)
 
 ## License
 Copyright 2015 Takagi Katsuyuki
