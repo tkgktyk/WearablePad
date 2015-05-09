@@ -38,7 +38,10 @@ public class TouchMessage implements Parcelable {
     public static final byte EVENT_TAP_COUNT_MASK = (byte) 0x0F;
 
     public static byte makeTapEvent(int tapCount) {
-        return (byte) (EVENT_ACTION_TAP | (tapCount & EVENT_TAP_COUNT_MASK));
+        if (tapCount > EVENT_TAP_COUNT_MASK) {
+            tapCount = EVENT_TAP_COUNT_MASK;
+        }
+        return (byte) (EVENT_ACTION_TAP | tapCount);
     }
 
     public static final byte EVENT_ACTION_BACK = (byte) 0x80;
