@@ -34,6 +34,7 @@ For v0.2.0 or later
 |Handheld|Wear||
 |---|---|---|
 |Tap|Tap||
+|Double Tap|Double Tap||
 |Taps (Up to 15)|Taps||
 |Move Cursor|Swipe||
 |Swipe|Tap + Swipe|Swipe after single tap|
