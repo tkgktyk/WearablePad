@@ -41,7 +41,8 @@ import jp.tkgktyk.wearablepadlib.TouchMessage;
 public class MainActivity extends Activity {
 
     private static final int REQUEST_EXTRA_ACTION = 1;
-    private TouchpadView.OnTouchpadEventListener mOnTouchpadEventListener = new TouchpadView.OnTouchpadEventListener() {
+    private TouchpadView.OnTouchpadEventListener mOnTouchpadEventListener
+            = new TouchpadView.OnTouchpadEventListener() {
         @Override
         public void onStart(int x, int y) {
             MyApp.logD("onStart: x=" + x + ", y=" + y);
@@ -160,18 +161,48 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    mNodes = Wearable.NodeApi.getConnectedNodes(mClient).await();
                     while (mRunning) {
-                        send(mEvents.take());
-                        MyApp.logD("queue size = " + mEvents.size());
+                        final TouchMessage message = mEvents.take();
+                        final int count = mEvents.size();
+                        MyApp.logD("queue size = " + count);
+                        if (mEvents.size() != 0) {
+                            if (message.event == TouchMessage.EVENT_MOVE) {
+                                compressAndSend(count, TouchMessage.EVENT_MOVE, message);
+                            } else if (message.event == TouchMessage.EVENT_DRAG) {
+                                compressAndSend(count, TouchMessage.EVENT_DRAG, message);
+                            }
+                        } else {
+                            send(message);
+                        }
                     }
                 } catch (InterruptedException e) {
+                }
+            }
+
+            private void compressAndSend(int count, int event, TouchMessage baseMessage)
+                    throws InterruptedException {
+                TouchMessage message2 = null;
+                for (int i = 0; i < count; ++i) {
+                    message2 = mEvents.take();
+                    if (message2.event == event) {
+                        baseMessage.x += message2.x;
+                        baseMessage.y += message2.y;
+                        message2 = null;
+                        MyApp.logD("compress scroll event#" + i + ": " + event);
+                    } else {
+                        break;
+                    }
+                }
+                send(baseMessage);
+                if (message2 != null) {
+                    send(message2);
                 }
             }
 
             private void send(TouchMessage message) {
                 Log.d("MyService", "event: " + message.event + ", x: " + message.x + ", y: " + message.y);
                 final byte[] data = ParcelableUtil.marshall(message);
+                mNodes = Wearable.NodeApi.getConnectedNodes(mClient).await();
                 for (Node node : mNodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
                             mClient,
