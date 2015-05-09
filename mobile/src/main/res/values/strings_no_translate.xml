@@ -1,6 +1,6 @@
 <resources>
     <!-- Input Device -->
-    <string name="key_input_device" translatable="false">key_input_device_number</string>
+    <string name="key_input_device" translatable="false">key_input_device</string>
     <string-array name="input_devices" translatable="false">
         <item>/dev/input/event0</item>
         <item>/dev/input/event1</item>
@@ -22,7 +22,7 @@
 
     <!-- Cursor Speed -->
     <string name="key_cursor_speed">key_cursor_speed</string>
-    <string name="default_cursor_speed">100</string>
+    <string name="default_cursor_speed">200</string>
 
     <!-- About -->
     <string name="key_about">key_about</string>
