@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Takagi Katsuyuki
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jp.tkgktyk.wearablepadlib;
 
 import android.os.Parcel;
@@ -11,17 +27,35 @@ import java.nio.ByteBuffer;
 public class TouchMessage implements Parcelable {
     public static final byte EVENT_UNKNOWN = (byte) 0x00;
 
-    public static final byte EVENT_DOWN = (byte) 0x01;
-    public static final byte EVENT_UP = (byte) 0x02;
-    public static final byte EVENT_MOVE = (byte) 0x03;
-    public static final byte EVENT_START_DRAG = (byte) 0x04;
+    public static final byte EVENT_SHOW_CURSOR = (byte) 0x01;
+    public static final byte EVENT_END_STROKE = (byte) 0x02;
+    public static final byte EVENT_PRESS = (byte) 0x03;
+    public static final byte EVENT_MOVE = (byte) 0x04;
+    public static final byte EVENT_START_DRAG = (byte) 0x05;
+    public static final byte EVENT_DRAG = (byte) 0x06;
 
-    public static final byte EVENT_SINGLE_TAP = (byte) 0x10;
-    public static final byte EVENT_DOUBLE_TAP = (byte) 0x20;
-    public static final byte EVENT_BACK = (byte) 0x30;
-    public static final byte EVENT_TASKS = (byte) 0x40;
-    public static final byte EVENT_HOME = (byte) 0x50;
-    public static final byte EVENT_EXIT = (byte) 0x60;
+    public static final byte EVENT_ACTION_TAP = (byte) 0x10;
+    public static final byte EVENT_TAP_COUNT_MASK = (byte) 0x0F;
+
+    public static byte makeTapEvent(int tapCount) {
+        return (byte) (EVENT_ACTION_TAP | (tapCount & EVENT_TAP_COUNT_MASK));
+    }
+
+    public static final byte EVENT_ACTION_BACK = (byte) 0x80;
+    public static final byte EVENT_ACTION_TASKS = (byte) 0x90;
+    public static final byte EVENT_ACTION_HOME = (byte) 0xA0;
+    public static final byte EVENT_ACTION_EXIT = (byte) 0xB0;
+
+    public byte getMaskedEvent() {
+        if ((event & ~EVENT_TAP_COUNT_MASK) == EVENT_ACTION_TAP) {
+            return EVENT_ACTION_TAP;
+        }
+        return event;
+    }
+
+    public byte getTapCount() {
+        return (byte) (event & EVENT_TAP_COUNT_MASK);
+    }
 
     public byte event;
     public short x;

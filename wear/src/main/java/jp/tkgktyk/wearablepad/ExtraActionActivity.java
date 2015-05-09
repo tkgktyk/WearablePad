@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Takagi Katsuyuki
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jp.tkgktyk.wearablepad;
 
 import android.app.Activity;
@@ -21,7 +37,6 @@ import butterknife.InjectView;
 public class ExtraActionActivity extends Activity {
 
     public static final String ACTION_BACK = "back";
-    public static final String ACTION_DOUBLE_TAP = "double_tap";
     public static final String ACTION_TASKS = "tasks";
     public static final String ACTION_HOME = "home";
     public static final String ACTION_EXIT = "exit";
@@ -36,21 +51,18 @@ public class ExtraActionActivity extends Activity {
         ButterKnife.inject(this);
 
         mWearableListView.setAdapter(new MyAdapter(this));
-        mWearableListView.scrollToPosition(2);
+        mWearableListView.scrollToPosition(1);
         mWearableListView.setHasFixedSize(true);
         mWearableListView.setClickListener(new WearableListView.ClickListener() {
             @Override
             public void onClick(WearableListView.ViewHolder viewHolder) {
                 String action = null;
                 switch ((int) mWearableListView.getAdapter().getItemId(viewHolder.getPosition())) {
-                    case R.string.action_back:
-                        action = ACTION_BACK;
-                        break;
-                    case R.string.action_double_tap:
-                        action = ACTION_DOUBLE_TAP;
-                        break;
                     case R.string.action_tasks:
                         action = ACTION_TASKS;
+                        break;
+                    case R.string.action_back:
+                        action = ACTION_BACK;
                         break;
                     case R.string.action_home:
                         action = ACTION_HOME;
@@ -75,10 +87,9 @@ public class ExtraActionActivity extends Activity {
 
     private class MyAdapter extends WearableListView.Adapter {
         private final int[] mActionIds = {
-                R.string.action_home,
                 R.string.action_tasks,
                 R.string.action_back,
-                R.string.action_double_tap,
+                R.string.action_home,
                 R.string.action_exit,
         };
         private final LayoutInflater mLayoutInflater;

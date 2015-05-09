@@ -3,7 +3,6 @@
 
     <!-- Extra Actions -->
     <string name="action_back">Back key</string>
-    <string name="action_double_tap">Double tap</string>
     <string name="action_tasks">Task key</string>
     <string name="action_home">Home key</string>
     <string name="action_exit">Exit app</string>

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Takagi Katsuyuki
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jp.tkgktyk.wearablepad;
 
 import android.content.Context;
@@ -31,8 +47,6 @@ import jp.tkgktyk.wearablepadlib.TouchMessage;
  * Created by tkgktyk on 2015/04/27.
  */
 public class MyService extends WearableListenerService {
-    private static final String TAG = MyService.class.getSimpleName();
-
     private static final short EV_ABS = 3;
     private static final short EV_SYN = 0;
 
@@ -48,7 +62,9 @@ public class MyService extends WearableListenerService {
 
     private int mCursorX;
     private int mCursorY;
-    private boolean mIsBeingDragged;
+    private int mSwipeCursorX;
+    private int mSwipeCursorY;
+
     private Point mDisplaySize;
     private WindowManager mWindowManager;
     private ImageView mCursorView;
@@ -59,21 +75,48 @@ public class MyService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d("MyService", "onMessageReceived");
-        Log.d("MyService", messageEvent.getPath());
+        MyApp.logD("onMessageReceived");
+        MyApp.logD(messageEvent.getPath());
         TouchMessage message = ParcelableUtil.unmarshall(messageEvent.getData(), TouchMessage.CREATOR);
-        Log.d("MyService", "event: " + message.event + ", x: " + message.x + ", y: " + message.y);
+        MyApp.logD("event: " + message.event + ", x: " + message.x + ", y: " + message.y);
 
         if (mInputDevice == null) {
             return;
         }
 
         ArrayList<byte[]> cmds = Lists.newArrayList();
-        switch (message.event) {
-            case TouchMessage.EVENT_DOWN:
+        switch (message.getMaskedEvent()) {
+            case TouchMessage.EVENT_SHOW_CURSOR:
+                mCursorView.setVisibility(View.VISIBLE);
+                updateCursorView();
                 break;
             case TouchMessage.EVENT_START_DRAG:
-                mIsBeingDragged = true;
+                cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, (int) System.currentTimeMillis()));
+                mSwipeCursorX = mCursorX;
+                mSwipeCursorY = mCursorY;
+                // drop
+            case TouchMessage.EVENT_DRAG:
+                mSwipeCursorX = clampX(mSwipeCursorX + message.x * mSettings.speed);
+                mSwipeCursorY = clampY(mSwipeCursorY + message.y * mSettings.speed);
+                cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
+                        Math.round(mSwipeCursorX * mSettings.ratioX)
+                ));
+                cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_Y,
+                        Math.round(mSwipeCursorY * mSettings.ratioY)
+                ));
+                cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
+//                updateCursorView();
+                break;
+            case TouchMessage.EVENT_MOVE:
+                mCursorX = clampX(mCursorX + message.x * mSettings.speed);
+                mCursorY = clampY(mCursorY + message.y * mSettings.speed);
+                updateCursorView();
+                break;
+            case TouchMessage.EVENT_END_STROKE:
+                cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, 0xFFFFFFFF));
+                cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
+                break;
+            case TouchMessage.EVENT_PRESS:
                 cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, (int) System.currentTimeMillis()));
                 cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
                         Math.round(mCursorX * mSettings.ratioX)
@@ -84,54 +127,23 @@ public class MyService extends WearableListenerService {
                 cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
                 updateCursorView();
                 break;
-            case TouchMessage.EVENT_MOVE:
-                if (message.x != 0) {
-                    mCursorX = clampX(mCursorX - message.x * mSettings.speed);
-                    if (mIsBeingDragged) {
-                        cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
-                                Math.round(mCursorX * mSettings.ratioX)
-                        ));
-                    }
-                }
-                if (message.y != 0) {
-                    mCursorY = clampY(mCursorY - message.y * mSettings.speed);
-                    if (mIsBeingDragged) {
-                        cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_Y,
-                                Math.round(mCursorY * mSettings.ratioY)
-                        ));
-                    }
-                }
-                if (mIsBeingDragged) {
-                    cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
+            case TouchMessage.EVENT_ACTION_TAP:
+                final int count = message.getTapCount();
+                for (int i = 0; i < count; ++i) {
+                    performTap(cmds);
                 }
                 updateCursorView();
                 break;
-            case TouchMessage.EVENT_UP:
-                if (mIsBeingDragged) {
-                    cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, 0xFFFFFFFF));
-                    cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
-                }
-                mIsBeingDragged = false;
-                break;
-            case TouchMessage.EVENT_SINGLE_TAP:
-                performSingleTap(cmds);
-                updateCursorView();
-                break;
-            case TouchMessage.EVENT_DOUBLE_TAP:
-                performSingleTap(cmds);
-                performSingleTap(cmds);
-                updateCursorView();
-                break;
-            case TouchMessage.EVENT_BACK:
+            case TouchMessage.EVENT_ACTION_BACK:
                 Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_BACK);
                 break;
-            case TouchMessage.EVENT_TASKS:
+            case TouchMessage.EVENT_ACTION_TASKS:
                 Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
                 break;
-            case TouchMessage.EVENT_HOME:
+            case TouchMessage.EVENT_ACTION_HOME:
                 Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_HOME);
                 break;
-            case TouchMessage.EVENT_EXIT:
+            case TouchMessage.EVENT_ACTION_EXIT:
                 // not working
 //                stopSelf();
                 break;
@@ -146,10 +158,10 @@ public class MyService extends WearableListenerService {
             e.printStackTrace();
         }
         stopwatch.stop();
-        Log.d("watchpad", "time: " + stopwatch);
+        MyApp.logD("time: " + stopwatch);
     }
 
-    private void performSingleTap(ArrayList<byte[]> cmds) {
+    private void performTap(ArrayList<byte[]> cmds) {
         // down
         cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, (int) System.currentTimeMillis()));
         cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
@@ -212,7 +224,7 @@ public class MyService extends WearableListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate");
+        MyApp.logD("onCreate");
 
         mSettings = new Settings(this);
 
@@ -277,7 +289,7 @@ public class MyService extends WearableListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy");
+        MyApp.logD("onDestroy");
 
         removeCursor();
 

@@ -1,12 +1,25 @@
+/*
+ * Copyright 2015 Takagi Katsuyuki
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jp.tkgktyk.wearablepad;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -21,154 +34,89 @@ import java.util.concurrent.BlockingQueue;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import jp.tkgktyk.wearablepad.util.TouchpadView;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 public class MainActivity extends Activity {
 
     private static final int REQUEST_EXTRA_ACTION = 1;
-    private GestureDetector.SimpleOnGestureListener mOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+    private TouchpadView.OnTouchpadEventListener mOnTouchpadEventListener = new TouchpadView.OnTouchpadEventListener() {
         @Override
-        public boolean onDoubleTap(MotionEvent e) {
-            MyApp.logD("onDoubleTap");
-            startActivityForResult(new Intent(MainActivity.this, ExtraActionActivity.class),
-                    REQUEST_EXTRA_ACTION);
-            return true;
+        public void onStart(int x, int y) {
+            MyApp.logD("onStart: x=" + x + ", y=" + y);
+            postMessage(TouchMessage.EVENT_SHOW_CURSOR);
         }
 
         @Override
-        public boolean onDoubleTapEvent(MotionEvent e) {
-            MyApp.logD("onDoubleTapEvent");
-            return false;
+        public void onStopAsTap(int tapCount, int x, int y) {
+            MyApp.logD("onStopAsTap: count=" + tapCount + ", x=" + x + ", y=" + y);
+            postTapMessage(tapCount);
         }
 
         @Override
-        public boolean onDown(MotionEvent e) {
-            MyApp.logD("onDown");
-//            MyApp.logD(e.toString());
-//            final TouchMessage message = new TouchMessage();
-//            message.event = TouchMessage.EVENT_DOWN;
-//            message.x = getX(e);
-//            message.y = getY(e);
-//            postMessage(message);
-//            return true;
-            return false;
+        public void onStop(int tapCount, int x, int y) {
+            MyApp.logD("onStop: count=" + tapCount + ", x=" + x + ", y=" + y);
+            postMessage(TouchMessage.EVENT_END_STROKE);
         }
 
         @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            MyApp.logD("onFling");
-            return false;
-        }
-
-        @Override
-        public void onLongPress(MotionEvent e) {
-            MyApp.logD("onLongPress");
-            MyApp.logD(e.toString());
-            final TouchMessage message = new TouchMessage();
-            message.event = TouchMessage.EVENT_START_DRAG;
-            message.x = getX(e);
-            message.y = getY(e);
-            postMessage(message);
-        }
-
-        @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            MyApp.logD("onScroll");
-//            MyApp.logD(e1.toString());
-//            MyApp.logD(e2.toString());
-//            final TouchMessage message = new TouchMessage();
-//            message.event = TouchMessage.EVENT_MOVE;
-//            message.x = floatToShort(distanceX);
-//            message.y = floatToShort(distanceY);
-//            postMessage(message);
-//            return true;
-            return false;
-        }
-
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            MyApp.logD("onSingleTapConfirmed");
-            MyApp.logD(e.toString());
-            final TouchMessage message = new TouchMessage();
-            message.event = TouchMessage.EVENT_SINGLE_TAP;
-            message.x = getX(e);
-            message.y = getY(e);
-            postMessage(message);
-            return true;
-        }
-
-        @Override
-        public boolean onSingleTapUp(MotionEvent e) {
-            MyApp.logD("onSingleTapUp");
-            return false;
-        }
-    };
-    @InjectView(R.id.screen)
-    View mScreen;
-    private View.OnTouchListener mOnTouchListener = new View.OnTouchListener() {
-        private float mLastX;
-        private float mLastY;
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (!mGestureDetector.onTouchEvent(event)) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN: {
-                        mLastX = event.getX();
-                        mLastY = event.getY();
-                        final TouchMessage message = new TouchMessage();
-                        message.event = TouchMessage.EVENT_DOWN;
-                        message.x = floatToShort(mLastX);
-                        message.y = floatToShort(mLastY);
-                        postMessage(message);
-                        break;
-                    }
-                    case MotionEvent.ACTION_MOVE: {
-                        final float x = event.getX();
-                        final float y = event.getY();
-                        final float dx = mLastX - x;
-                        final float dy = mLastY - y;
-                        mLastX = x;
-                        mLastY = y;
-                        final TouchMessage message = new TouchMessage();
-                        message.event  =TouchMessage.EVENT_MOVE;
-                        message.x = floatToShort(dx);
-                        message.y = floatToShort(dy);
-                        postMessage(message);
-                        break;
-                    }
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL: {
-                        final TouchMessage message = new TouchMessage();
-                        message.event = TouchMessage.EVENT_UP;
-                        message.x = getX(event);
-                        message.y = getY(event);
-                        postMessage(message);
-                        break;
-                    }
-                }
+        public void onStartScroll(int tapCount, int dx, int dy) {
+            MyApp.logD("onStartScroll: count=" + tapCount + ", dx=" + dx + ", dy=" + dy);
+            if (tapCount == 0) {
+                postMessage(TouchMessage.EVENT_MOVE, dx, dy);
+            } else if (tapCount > 1) {
+                postTapMessage(tapCount - 1);
+                postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
+            } else {
+                postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
             }
-            return true;
         }
 
+        @Override
+        public void onScroll(int tapCount, int dx, int dy) {
+            MyApp.logD("onScroll: count=" + tapCount + ", dx=" + dx + ", dy=" + dy);
+            if (tapCount == 0) {
+                postMessage(TouchMessage.EVENT_MOVE, dx, dy);
+            } else {
+                postMessage(TouchMessage.EVENT_DRAG, dx, dy);
+            }
+        }
+
+        @Override
+        public void onLongPress(int tapCount, int x, int y) {
+            MyApp.logD("onLongPress: count=" + tapCount + ", x=" + x + ", y=" + y);
+            if (tapCount != 0) {
+                startActivityForResult(new Intent(MainActivity.this, ExtraActionActivity.class),
+                        REQUEST_EXTRA_ACTION);
+            } else {
+                postMessage(TouchMessage.EVENT_PRESS);
+            }
+        }
     };
+
+    @InjectView(R.id.screen)
+    TouchpadView mTouchpadView;
+
     private GoogleApiClient mClient;
     private NodeApi.GetConnectedNodesResult mNodes;
     private BlockingQueue<TouchMessage> mEvents;
-    private GestureDetector mGestureDetector;
     private boolean mRunning;
 
-    private short getX(MotionEvent event) {
-        return floatToShort(event.getX());
+    private void postTapMessage(int tapCount) {
+        postMessage(TouchMessage.makeTapEvent(tapCount), 0, 0);
     }
 
-    private short getY(MotionEvent event) {
-        return floatToShort(event.getY());
+    private void postMessage(byte event) {
+        postMessage(event, 0, 0);
     }
 
-    private short floatToShort(float value) {
-        return (short) Math.round(value);
+    private void postMessage(byte event, int x, int y) {
+        final TouchMessage message = new TouchMessage();
+        message.event = event;
+        message.x = (short) x;
+        message.y = (short) y;
+        postMessage(message);
     }
 
     private void postMessage(TouchMessage message) {
@@ -183,8 +131,7 @@ public class MainActivity extends Activity {
 
         mRunning = true;
 
-        mGestureDetector = new GestureDetector(this, mOnGestureListener);
-        mScreen.setOnTouchListener(mOnTouchListener);
+        mTouchpadView.setOnTouchpadEventListener(mOnTouchpadEventListener);
 
         mClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -254,21 +201,19 @@ public class MainActivity extends Activity {
         switch (requestCode) {
             case REQUEST_EXTRA_ACTION:
                 if (resultCode == RESULT_OK) {
-                    final TouchMessage message = new TouchMessage();
                     final String action = data.getAction();
+                    byte event = TouchMessage.EVENT_UNKNOWN;
                     if (Objects.equal(action, ExtraActionActivity.ACTION_BACK)) {
-                        message.event = TouchMessage.EVENT_BACK;
-                    } else if (Objects.equal(action, ExtraActionActivity.ACTION_DOUBLE_TAP)) {
-                        message.event = TouchMessage.EVENT_DOUBLE_TAP;
+                        event = TouchMessage.EVENT_ACTION_BACK;
                     } else if (Objects.equal(action, ExtraActionActivity.ACTION_TASKS)) {
-                        message.event = TouchMessage.EVENT_TASKS;
+                        event = TouchMessage.EVENT_ACTION_TASKS;
                     } else if (Objects.equal(action, ExtraActionActivity.ACTION_HOME)) {
-                        message.event = TouchMessage.EVENT_HOME;
+                        event = TouchMessage.EVENT_ACTION_HOME;
                     } else if (Objects.equal(action, ExtraActionActivity.ACTION_EXIT)) {
-                        message.event = TouchMessage.EVENT_EXIT;
+                        event = TouchMessage.EVENT_ACTION_EXIT;
                         finish();
                     }
-                    postMessage(message);
+                    postMessage(event);
                 }
                 break;
             default:
