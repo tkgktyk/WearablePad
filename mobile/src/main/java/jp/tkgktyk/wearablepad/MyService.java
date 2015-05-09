@@ -20,8 +20,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -58,6 +58,7 @@ public class MyService extends WearableListenerService {
     private static final String KEY_LAST_CURSOR_X = "last_cursor_x";
     private static final String KEY_LAST_CURSOR_Y = "last_cursor_y";
 
+    private PowerManager.WakeLock mWakeLock;
     private Settings mSettings;
 
     private int mCursorX;
@@ -226,6 +227,12 @@ public class MyService extends WearableListenerService {
         super.onCreate();
         MyApp.logD("onCreate");
 
+        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+        mWakeLock = pm.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                        PowerManager.ON_AFTER_RELEASE, "MyWakeLock");
+        mWakeLock.acquire();
+
         mSettings = new Settings(this);
 
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
@@ -300,6 +307,8 @@ public class MyService extends WearableListenerService {
                 e.printStackTrace();
             }
         }
+
+        mWakeLock.release();
     }
 
 }
