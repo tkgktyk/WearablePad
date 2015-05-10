@@ -18,9 +18,9 @@ I referred to
 [stackoverflow:Q27496968](http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx).
 
 ### Select touch screen from eventX
-Android device has some /dev/input/eventX, X is number from 0, so you need to know which X links to your touch screen.
+Android device has some /dev/input/eventX, X is number from 0, so you need to know which eventX links to your touch screen.
 The number of touch screen is depending on device.
-The following page is helpful for X:
+The following page is helpful for eventX:
 [LMT Launcher's thread on XDA](http://forum.xda-developers.com/showthread.php?t=1330150)
 
 For Nexus4, touch screen is /dev/input/event2, and Ratio X = 200%, and Ratio Y = 200%.
@@ -38,7 +38,7 @@ For v0.2.0 or later
 |Taps (Up to 15)|Taps||
 |Move Cursor|Swipe||
 |Swipe|Tap + Swipe|Swipe after single tap|
-|Tap + Swipe|Double Tap + Swipe||
+|Tap + Swipe|Double Tap + Swipe|Zoom in/out by one finger|
 |Taps + Swipe|Tap + Taps + Swipe|One more tap|
 |Longpress|Long-Longpress|Keep pressing|
 
