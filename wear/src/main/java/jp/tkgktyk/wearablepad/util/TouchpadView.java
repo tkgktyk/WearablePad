@@ -166,9 +166,10 @@ public class TouchpadView extends View {
     }
 
     private boolean isConsideredDoubleTap(MotionEvent lastUp, MotionEvent currentUp) {
-        int deltaX = (int) lastUp.getX() - (int) currentUp.getX();
-        int deltaY = (int) lastUp.getY() - (int) currentUp.getY();
-        return (deltaX * deltaX + deltaY * deltaY < mDoubleTapSlopSquare);
+//        int deltaX = (int) lastUp.getX() - (int) currentUp.getX();
+//        int deltaY = (int) lastUp.getY() - (int) currentUp.getY();
+//        return (deltaX * deltaX + deltaY * deltaY < mDoubleTapSlopSquare);
+        return true;
     }
 
     private void dispatchLongPress() {
