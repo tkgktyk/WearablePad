@@ -21,6 +21,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
+import android.widget.ImageButton;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -28,19 +31,18 @@ import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
-import com.google.common.base.Objects;
 import com.google.common.collect.Queues;
 
 import java.util.concurrent.BlockingQueue;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import butterknife.OnClick;
 import jp.tkgktyk.wearablepad.util.TouchpadView;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 public class MainActivity extends Activity {
-
     private static final int REQUEST_EXTRA_ACTION = 1;
     private TouchpadView.OnTouchpadEventListener mOnTouchpadEventListener
             = new TouchpadView.OnTouchpadEventListener() {
@@ -53,7 +55,7 @@ public class MainActivity extends Activity {
         @Override
         public void onStopAsTap(int tapCount, int x, int y) {
             MyApp.logD("onStopAsTap: count=" + tapCount + ", x=" + x + ", y=" + y);
-            postTapMessage(tapCount);
+            postActionMessage(TouchMessage.EVENT_ACTION_TAP, tapCount);
         }
 
         @Override
@@ -68,7 +70,7 @@ public class MainActivity extends Activity {
             if (tapCount == 0) {
                 postMessage(TouchMessage.EVENT_MOVE, dx, dy);
             } else if (tapCount > 1) {
-                postTapMessage(tapCount - 1);
+                postActionMessage(TouchMessage.EVENT_ACTION_TAP, tapCount - 1);
                 postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
             } else {
                 postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
@@ -89,6 +91,7 @@ public class MainActivity extends Activity {
         public void onLongPress(int tapCount, int x, int y) {
             MyApp.logD("onLongPress: count=" + tapCount + ", x=" + x + ", y=" + y);
             if (tapCount != 0) {
+                performHapticFeedback(mTouchpadView);
                 startActivityForResult(new Intent(MainActivity.this, ExtraActionActivity.class),
                         REQUEST_EXTRA_ACTION);
             } else {
@@ -97,16 +100,45 @@ public class MainActivity extends Activity {
         }
     };
 
-    @InjectView(R.id.screen)
+    @InjectView(R.id.touchpad)
     TouchpadView mTouchpadView;
+    @InjectView(R.id.left_button)
+    ImageButton mLeftButton;
+    @InjectView(R.id.top_button)
+    ImageButton mTopButton;
+    @InjectView(R.id.right_button)
+    ImageButton mRightButton;
+    @InjectView(R.id.bottom_button)
+    ImageButton mBottomButton;
+
+    @OnClick({R.id.left_button, R.id.top_button, R.id.right_button, R.id.bottom_button})
+    void postSwipeMessage(ImageButton button) {
+        performHapticFeedback(button);
+        byte value = TouchMessage.ACTION_VALUE_NONE;
+        switch (button.getId()) {
+            case R.id.left_button:
+                value = TouchMessage.SWIPE_RIGHT_TO_LEFT;
+                break;
+            case R.id.top_button:
+                value = TouchMessage.SWIPE_BOTTOM_TO_TOP;
+                break;
+            case R.id.right_button:
+                value = TouchMessage.SWIPE_LEFT_TO_RIGHT;
+                break;
+            case R.id.bottom_button:
+                value = TouchMessage.SWIPE_TOP_TO_BOTTOM;
+                break;
+        }
+        postActionMessage(TouchMessage.EVENT_ACTION_SWIPE, value);
+    }
 
     private GoogleApiClient mClient;
     private NodeApi.GetConnectedNodesResult mNodes;
-    private BlockingQueue<TouchMessage> mEvents;
+    private BlockingQueue<TouchMessage> mMessages;
     private boolean mRunning;
 
-    private void postTapMessage(int tapCount) {
-        postMessage(TouchMessage.makeTapEvent(tapCount), 0, 0);
+    private void postActionMessage(byte action, int value) {
+        postMessage(TouchMessage.makeActionEvent(action, value));
     }
 
     private void postMessage(byte event) {
@@ -122,7 +154,7 @@ public class MainActivity extends Activity {
     }
 
     private void postMessage(TouchMessage message) {
-        mEvents.add(message);
+        mMessages.add(message);
     }
 
     @Override
@@ -135,6 +167,14 @@ public class MainActivity extends Activity {
 
         mTouchpadView.setOnTouchpadEventListener(mOnTouchpadEventListener);
 
+        initClient();
+        initMessageQueue();
+
+        final TouchMessage message = new TouchMessage();
+        postMessage(message);
+    }
+
+    private void initClient() {
         mClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
@@ -157,35 +197,50 @@ public class MainActivity extends Activity {
                 .build();
         mClient.connect();
 
-        mEvents = Queues.newLinkedBlockingQueue();
+    }
+
+    private void initMessageQueue() {
+        mMessages = Queues.newLinkedBlockingQueue();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     while (mRunning) {
-                        final TouchMessage message = mEvents.take();
-                        final int count = mEvents.size();
+                        final TouchMessage message = mMessages.take();
+                        final int count = mMessages.size();
                         MyApp.logD("queue size = " + count);
-                        if (mEvents.size() != 0) {
+                        TouchMessage lastMessage;
+                        if (mMessages.size() != 0) {
                             if (message.event == TouchMessage.EVENT_MOVE) {
-                                compressAndSend(count, TouchMessage.EVENT_MOVE, message);
+                                lastMessage = compressAndSend(count, TouchMessage.EVENT_MOVE, message);
                             } else if (message.event == TouchMessage.EVENT_DRAG) {
-                                compressAndSend(count, TouchMessage.EVENT_DRAG, message);
+                                lastMessage = compressAndSend(count, TouchMessage.EVENT_DRAG, message);
+                            } else {
+                                send(message);
+                                lastMessage = message;
                             }
                         } else {
                             send(message);
+                            lastMessage = message;
                         }
-                        SystemClock.sleep(100);
+                        switch (lastMessage.event) {
+                            case TouchMessage.EVENT_MOVE:
+                            case TouchMessage.EVENT_START_DRAG:
+                            case TouchMessage.EVENT_DRAG:
+                                SystemClock.sleep(100);
+                                break;
+                        }
                     }
                 } catch (InterruptedException e) {
+                    MyApp.logE(e);
                 }
             }
 
-            private void compressAndSend(int count, int event, TouchMessage baseMessage)
+            private TouchMessage compressAndSend(int count, int event, TouchMessage baseMessage)
                     throws InterruptedException {
                 TouchMessage message2 = null;
                 for (int i = 0; i < count; ++i) {
-                    message2 = mEvents.take();
+                    message2 = mMessages.take();
                     if (message2.event == event) {
                         baseMessage.x += message2.x;
                         baseMessage.y += message2.y;
@@ -195,9 +250,13 @@ public class MainActivity extends Activity {
                         break;
                     }
                 }
-                send(baseMessage);
-                if (message2 != null) {
+                if (message2 == null) {
+                    send(baseMessage);
+                    return baseMessage;
+                } else {
+                    send(baseMessage);
                     send(message2);
+                    return message2;
                 }
             }
 
@@ -218,8 +277,6 @@ public class MainActivity extends Activity {
                 }
             }
         }).start();
-        final TouchMessage message = new TouchMessage();
-        postMessage(message);
     }
 
     @Override
@@ -234,23 +291,35 @@ public class MainActivity extends Activity {
         switch (requestCode) {
             case REQUEST_EXTRA_ACTION:
                 if (resultCode == RESULT_OK) {
-                    final String action = data.getAction();
-                    byte event = TouchMessage.EVENT_UNKNOWN;
-                    if (Objects.equal(action, ExtraActionActivity.ACTION_BACK)) {
-                        event = TouchMessage.EVENT_ACTION_BACK;
-                    } else if (Objects.equal(action, ExtraActionActivity.ACTION_TASKS)) {
-                        event = TouchMessage.EVENT_ACTION_TASKS;
-                    } else if (Objects.equal(action, ExtraActionActivity.ACTION_HOME)) {
-                        event = TouchMessage.EVENT_ACTION_HOME;
-                    } else if (Objects.equal(action, ExtraActionActivity.ACTION_EXIT)) {
-                        event = TouchMessage.EVENT_ACTION_EXIT;
-                        finish();
+                    switch (data.getAction()) {
+                        case ExtraActionActivity.ACTION_BACK:
+                            postActionMessage(TouchMessage.EVENT_ACTION_SYSTEM_UI,
+                                    TouchMessage.SYSTEM_UI_BACK);
+                            break;
+                        case ExtraActionActivity.ACTION_TASKS:
+                            postActionMessage(TouchMessage.EVENT_ACTION_SYSTEM_UI,
+                                    TouchMessage.SYSTEM_UI_TASKS);
+                            break;
+                        case ExtraActionActivity.ACTION_HOME:
+                            postActionMessage(TouchMessage.EVENT_ACTION_SYSTEM_UI,
+                                    TouchMessage.SYSTEM_UI_HOME);
+                            break;
+                        case ExtraActionActivity.ACTION_STATUSBAR:
+                            postActionMessage(TouchMessage.EVENT_ACTION_SYSTEM_UI,
+                                    TouchMessage.SYSTEM_UI_STATUSBAR);
+                            break;
+                        case ExtraActionActivity.ACTION_EXIT:
+                            finish();
+                            break;
                     }
-                    postMessage(event);
                 }
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void performHapticFeedback(View view) {
+        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
     }
 }
