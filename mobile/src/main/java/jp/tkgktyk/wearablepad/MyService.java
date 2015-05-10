@@ -23,7 +23,6 @@ import android.graphics.Point;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -35,6 +34,8 @@ import com.google.common.collect.Lists;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -47,14 +48,21 @@ import jp.tkgktyk.wearablepadlib.TouchMessage;
  * Created by tkgktyk on 2015/04/27.
  */
 public class MyService extends WearableListenerService {
+    /**
+     * Input SubSystem
+     */
+    // EVENT TYPE
     private static final short EV_ABS = 3;
     private static final short EV_SYN = 0;
-
+    // VALUE TYPE
     private static final short ABS_MT_POSITION_X = 53;
     private static final short ABS_MT_POSITION_Y = 54;
     private static final short ABS_MT_TRACKING_ID = 57;
 
     private static final short SYN_REPORT = 0;
+
+    private static final int MAX_DISTANCE = 100;
+
     private static final String KEY_LAST_CURSOR_X = "last_cursor_x";
     private static final String KEY_LAST_CURSOR_Y = "last_cursor_y";
 
@@ -67,6 +75,7 @@ public class MyService extends WearableListenerService {
     private int mSwipeCursorY;
 
     private Point mDisplaySize;
+    private float mMaxDistance;
     private WindowManager mWindowManager;
     private ImageView mCursorView;
     private Point mCursorSize;
@@ -88,17 +97,46 @@ public class MyService extends WearableListenerService {
         ArrayList<byte[]> cmds = Lists.newArrayList();
         switch (message.getMaskedEvent()) {
             case TouchMessage.EVENT_SHOW_CURSOR:
-                mCursorView.setVisibility(View.VISIBLE);
-                updateCursorView();
+                mCursorView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mCursorView.setAlpha(1.0f);
+                        mLayoutParams.alpha = 1.0f;
+                        mCursorView.invalidate();
+                        updateCursorView();
+                    }
+                });
                 break;
             case TouchMessage.EVENT_START_DRAG:
                 cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, (int) System.currentTimeMillis()));
                 mSwipeCursorX = mCursorX;
                 mSwipeCursorY = mCursorY;
+                cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
+                        Math.round(mSwipeCursorX * mSettings.ratioX)
+                ));
+                cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_Y,
+                        Math.round(mSwipeCursorY * mSettings.ratioY)
+                ));
+                cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
                 // drop
             case TouchMessage.EVENT_DRAG:
-                mSwipeCursorX = clampX(mSwipeCursorX + message.x * mSettings.speed);
-                mSwipeCursorY = clampY(mSwipeCursorY + message.y * mSettings.speed);
+                final int newX = clampX(mSwipeCursorX + message.x * mSettings.speed);
+                final int newY = clampY(mSwipeCursorY + message.y * mSettings.speed);
+                final int dx = newX - mSwipeCursorX;
+                final int dy = newY - mSwipeCursorY;
+                final int distance = (int) Math.round(Math.sqrt(dx * dx + dy * dy));
+                final int n = (int) (distance / mMaxDistance) + 1; // ceil
+                for (int i = 0; i < n; ++i) {
+                    cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
+                            Math.round((mSwipeCursorX + dx * (i + 1) / n) * mSettings.ratioX)
+                    ));
+                    cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_Y,
+                            Math.round((mSwipeCursorY + dy * (i + 1) / n) * mSettings.ratioY)
+                    ));
+                    cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
+                }
+                mSwipeCursorX = newX;
+                mSwipeCursorY = newY;
                 cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X,
                         Math.round(mSwipeCursorX * mSettings.ratioX)
                 ));
@@ -126,27 +164,65 @@ public class MyService extends WearableListenerService {
                         Math.round(mCursorY * mSettings.ratioY)
                 ));
                 cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
-                updateCursorView();
+//                updateCursorView();
                 break;
             case TouchMessage.EVENT_ACTION_TAP:
-                final int count = message.getTapCount();
-                for (int i = 0; i < count; ++i) {
+                final int taps = message.getActionValue();
+                for (int i = 0; i < taps; ++i) {
                     performTap(cmds);
                 }
-                updateCursorView();
+//                updateCursorView();
                 break;
-            case TouchMessage.EVENT_ACTION_BACK:
-                Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_BACK);
+            case TouchMessage.EVENT_ACTION_SYSTEM_UI:
+                switch (message.getActionValue()) {
+                    case TouchMessage.SYSTEM_UI_BACK:
+                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_BACK);
+                        break;
+                    case TouchMessage.SYSTEM_UI_TASKS:
+                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
+                        break;
+                    case TouchMessage.SYSTEM_UI_HOME:
+                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_HOME);
+                        break;
+                    case TouchMessage.SYSTEM_UI_STATUSBAR:
+                        @SuppressWarnings("ResourceType") Object sbservice = getSystemService("statusbar");
+                        try {
+                            Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
+                            Method showsb = statusbarManager.getMethod("expandNotificationsPanel");
+                            showsb.invoke(sbservice);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                }
                 break;
-            case TouchMessage.EVENT_ACTION_TASKS:
-                Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
-                break;
-            case TouchMessage.EVENT_ACTION_HOME:
-                Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_HOME);
-                break;
-            case TouchMessage.EVENT_ACTION_EXIT:
-                // not working
-//                stopSelf();
+            case TouchMessage.EVENT_ACTION_SWIPE:
+                final int x1 = mCursorX;
+                final int y1 = mCursorY;
+                final int div = 3;
+                int x2 = x1;
+                int y2 = y1;
+                switch (message.getActionValue()) {
+                    case TouchMessage.SWIPE_LEFT_TO_RIGHT:
+                        x2 = clampX(x1 + mDisplaySize.x / div);
+                        break;
+                    case TouchMessage.SWIPE_TOP_TO_BOTTOM:
+                        y2 = clampY(y1 + mDisplaySize.y / div);
+                        break;
+                    case TouchMessage.SWIPE_RIGHT_TO_LEFT:
+                        x2 = clampX(x1 - mDisplaySize.x / div);
+                        break;
+                    case TouchMessage.SWIPE_BOTTOM_TO_TOP:
+                        y2 = clampY(y1 - mDisplaySize.y / div);
+                        break;
+                }
+                Shell.SU.run(String.format("input swipe %d %d %d %d", x1, y1, x2, y2));
                 break;
         }
         Stopwatch stopwatch = Stopwatch.createStarted();
@@ -238,6 +314,7 @@ public class MyService extends WearableListenerService {
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         mDisplaySize = new Point();
         mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
+        mMaxDistance = getResources().getDisplayMetrics().density * MAX_DISTANCE;
 
         // call after loading display size
         initCursorView();
@@ -275,9 +352,9 @@ public class MyService extends WearableListenerService {
                 updateCursorView();
             }
         });
-        mCursorView.setVisibility(View.GONE);
+        mCursorView.setAlpha(0.0f);
+        mLayoutParams.alpha = 0.0f;
         mWindowManager.addView(mCursorView, mLayoutParams);
-        mCursorView.setVisibility(View.VISIBLE);
     }
 
     private void removeCursor() {

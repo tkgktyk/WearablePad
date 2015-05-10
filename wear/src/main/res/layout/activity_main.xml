@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<jp.tkgktyk.wearablepad.util.TouchpadView
-    android:id="@+id/screen"
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,4 +8,57 @@
     tools:context=".MainActivity"
     tools:deviceIds="wear">
 
-</jp.tkgktyk.wearablepad.util.TouchpadView>
+    <jp.tkgktyk.wearablepad.util.TouchpadView
+        android:id="@+id/touchpad"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ImageButton
+        android:id="@+id/left_button"
+        android:layout_width="@dimen/image_button_size"
+        android:layout_height="@dimen/image_button_size"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:background="@android:color/transparent"
+        android:contentDescription="left"
+        android:rotation="0"
+        android:src="@mipmap/ic_swipe_button"
+        android:translationX="@dimen/image_button_size_half_minus"/>
+
+    <ImageButton
+        android:id="@+id/top_button"
+        android:layout_width="@dimen/image_button_size"
+        android:layout_height="@dimen/image_button_size"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        android:contentDescription="top"
+        android:rotation="90"
+        android:src="@mipmap/ic_swipe_button"
+        android:translationY="@dimen/image_button_size_half_minus"/>
+
+    <ImageButton
+        android:id="@+id/right_button"
+        android:layout_width="@dimen/image_button_size"
+        android:layout_height="@dimen/image_button_size"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:background="@android:color/transparent"
+        android:contentDescription="right"
+        android:rotation="180"
+        android:src="@mipmap/ic_swipe_button"
+        android:translationX="@dimen/image_button_size_half"/>
+
+    <ImageButton
+        android:id="@+id/bottom_button"
+        android:layout_width="@dimen/image_button_size"
+        android:layout_height="@dimen/image_button_size"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        android:contentDescription="buttom"
+        android:rotation="270"
+        android:src="@mipmap/ic_swipe_button"
+        android:translationY="@dimen/image_button_size_half"/>
+
+</RelativeLayout>

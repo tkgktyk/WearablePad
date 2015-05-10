@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
  */
 public class TouchMessage implements Parcelable {
     public static final byte EVENT_UNKNOWN = (byte) 0x00;
-
+    // for touch event
     public static final byte EVENT_SHOW_CURSOR = (byte) 0x01;
     public static final byte EVENT_END_STROKE = (byte) 0x02;
     public static final byte EVENT_PRESS = (byte) 0x03;
@@ -34,30 +34,44 @@ public class TouchMessage implements Parcelable {
     public static final byte EVENT_START_DRAG = (byte) 0x05;
     public static final byte EVENT_DRAG = (byte) 0x06;
 
-    public static final byte EVENT_ACTION_TAP = (byte) 0x10;
-    public static final byte EVENT_TAP_COUNT_MASK = (byte) 0x0F;
+    // extra action
+    public static final byte EVENT_ACTION_MASK = (byte) 0xF0;
+    public static final byte EVENT_ACTION_VALUE_MASK = (byte) 0x0F;
+    public static final byte ACTION_VALUE_NONE = (byte) 0x0;
 
-    public static byte makeTapEvent(int tapCount) {
-        if (tapCount > EVENT_TAP_COUNT_MASK) {
-            tapCount = EVENT_TAP_COUNT_MASK;
+    public static final byte EVENT_ACTION_SYSTEM_UI = (byte) 0x10;
+    public static final byte SYSTEM_UI_BACK = (byte) 0x1;
+    public static final byte SYSTEM_UI_TASKS = (byte) 0x2;
+    public static final byte SYSTEM_UI_HOME = (byte) 0x3;
+    public static final byte SYSTEM_UI_STATUSBAR = (byte) 0x4;
+
+    public static final byte EVENT_ACTION_TAP = (byte) 0x20;
+
+    public static final byte EVENT_ACTION_SWIPE = (byte) 0x30;
+    public static final byte SWIPE_LEFT_TO_RIGHT = (byte) 0x1;
+    public static final byte SWIPE_TOP_TO_BOTTOM = (byte) 0x2;
+    public static final byte SWIPE_RIGHT_TO_LEFT = (byte) 0x3;
+    public static final byte SWIPE_BOTTOM_TO_TOP = (byte) 0x4;
+
+    public static byte makeActionEvent(byte action, int value) {
+        if (value > EVENT_ACTION_VALUE_MASK) {
+            value = EVENT_ACTION_VALUE_MASK;
+        } else if (value < 0) {
+            value = 0;
         }
-        return (byte) (EVENT_ACTION_TAP | tapCount);
+        return (byte) (action | value);
     }
 
-    public static final byte EVENT_ACTION_BACK = (byte) 0x80;
-    public static final byte EVENT_ACTION_TASKS = (byte) 0x90;
-    public static final byte EVENT_ACTION_HOME = (byte) 0xA0;
-    public static final byte EVENT_ACTION_EXIT = (byte) 0xB0;
-
     public byte getMaskedEvent() {
-        if ((event & ~EVENT_TAP_COUNT_MASK) == EVENT_ACTION_TAP) {
-            return EVENT_ACTION_TAP;
+        if (event > EVENT_ACTION_VALUE_MASK) {
+            // action event
+            return (byte) (event & EVENT_ACTION_MASK);
         }
         return event;
     }
 
-    public byte getTapCount() {
-        return (byte) (event & EVENT_TAP_COUNT_MASK);
+    public int getActionValue() {
+        return event & EVENT_ACTION_VALUE_MASK;
     }
 
     public byte event;
