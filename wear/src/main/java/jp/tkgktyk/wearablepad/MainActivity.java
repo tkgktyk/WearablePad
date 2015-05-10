@@ -19,6 +19,7 @@ package jp.tkgktyk.wearablepad;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -174,6 +175,7 @@ public class MainActivity extends Activity {
                         } else {
                             send(message);
                         }
+                        SystemClock.sleep(100);
                     }
                 } catch (InterruptedException e) {
                 }
