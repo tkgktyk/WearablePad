@@ -5,7 +5,8 @@
     <string name="action_back">Back key</string>
     <string name="action_tasks">Task key</string>
     <string name="action_home">Home key</string>
-    <string name="action_exit">Exit app</string>
+    <string name="action_statusbar">Expand</string>
+    <string name="action_exit">Exit</string>
 
     <string name="invalid_action">Invalid action</string>
 </resources>
