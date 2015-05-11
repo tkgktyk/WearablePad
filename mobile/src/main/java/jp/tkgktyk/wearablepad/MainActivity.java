@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         protected interface ExtendsPutter {
-            public void putExtends(Intent activityIntent);
+            void putExtends(Intent activityIntent);
         }
     }
 
@@ -153,7 +153,13 @@ public class MainActivity extends AppCompatActivity {
 
         private void updatePreferences() {
             // Settings
-            showListSummary(R.string.key_input_device);
+            showListSummary(R.string.key_input_device, new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    BackgroundIntentService.launchService(preference.getContext());
+                    return true;
+                }
+            });
             showTextSummary(R.string.key_input_device_ratio_x, getString(R.string.unit_percent));
             showTextSummary(R.string.key_input_device_ratio_y, getString(R.string.unit_percent));
             showTextSummary(R.string.key_cursor_speed, getString(R.string.unit_percent));
