@@ -167,6 +167,7 @@ public class MyService extends WearableListenerService {
                 break;
             case TouchMessage.EVENT_ACTION_TAP:
                 final int taps = message.getActionValue();
+                MyApp.logD("taps = " + taps);
                 for (int i = 0; i < taps; ++i) {
                     performTap(cmds);
                 }
@@ -226,8 +227,13 @@ public class MyService extends WearableListenerService {
         }
         try {
             for (byte[] cmd : cmds) {
+                MyApp.logD("cmd.length = " + cmd.length);
+                StringBuilder sb = new StringBuilder(cmd.length * 2);
+                for(byte b: cmd) {
+                    sb.append(String.format("%02x", b & 0xff));
+                }
+                MyApp.logD(sb.toString());
                 mInputDevice.write(cmd);
-//                mInputDevice.write((byte) '\n');
             }
         } catch (IOException e) {
             MyApp.logE(e);
@@ -270,9 +276,14 @@ public class MyService extends WearableListenerService {
     }
 
     private byte[] makeEvent(short type, short code, int value) {
-        ByteBuffer buf = ByteBuffer.allocate(4 + 4 + 2 + 2 + 4).order(ByteOrder.LITTLE_ENDIAN);
-        buf.putInt(0);
-        buf.putInt(0);
+        final int headerSize = new NativeMethod().getInputEventHeaderSize();
+        MyApp.logD("headerSize = " + headerSize);
+        ByteBuffer buf = ByteBuffer
+                .allocate(headerSize + (Short.SIZE * 2 + Integer.SIZE) / Byte.SIZE)
+                .order(ByteOrder.LITTLE_ENDIAN);
+        for (int i = 0; i < headerSize; ++i) {
+            buf.put((byte)0);
+        }
         buf.putShort(type);
         buf.putShort(code);
         buf.putInt(value);
