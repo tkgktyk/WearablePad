@@ -43,9 +43,14 @@ import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 public class MainActivity extends Activity {
+
+    private static final int TAP_COUNT_TO_GRAB = 3;
     private static final int REQUEST_EXTRA_ACTION = 1;
+
     private TouchpadView.OnTouchpadEventListener mOnTouchpadEventListener
             = new TouchpadView.OnTouchpadEventListener() {
+        private boolean mInGrabMode = false;
+
         @Override
         public void onStart(int x, int y) {
             MyApp.logD("onStart: x=" + x + ", y=" + y);
@@ -55,24 +60,41 @@ public class MainActivity extends Activity {
         @Override
         public void onStopAsTap(int tapCount, int x, int y) {
             MyApp.logD("onStopAsTap: count=" + tapCount + ", x=" + x + ", y=" + y);
-            postActionMessage(TouchMessage.EVENT_ACTION_TAP, tapCount);
+            if (!mInGrabMode && tapCount == TAP_COUNT_TO_GRAB) {
+                performHapticFeedback(mTouchpadView);
+                postMessage(TouchMessage.EVENT_START_DRAG, 0, 0);
+                mInGrabMode = true;
+            } else if (mInGrabMode) {
+                postMessage(TouchMessage.EVENT_END_STROKE);
+                mInGrabMode = false;
+            } else {
+                postActionMessage(TouchMessage.EVENT_ACTION_TAP, tapCount);
+            }
         }
 
         @Override
         public void onStop(int tapCount, int x, int y) {
             MyApp.logD("onStop: count=" + tapCount + ", x=" + x + ", y=" + y);
-            postMessage(TouchMessage.EVENT_END_STROKE);
+            if (!mInGrabMode) {
+                postMessage(TouchMessage.EVENT_END_STROKE);
+            } else {
+                // keep pressing
+            }
         }
+
 
         @Override
         public void onStartScroll(int tapCount, int dx, int dy) {
             MyApp.logD("onStartScroll: count=" + tapCount + ", dx=" + dx + ", dy=" + dy);
-            if (tapCount == 0) {
+            if (mInGrabMode) {
+                postMessage(TouchMessage.EVENT_DRAG, dx, dy);
+            } else if (tapCount == 0) {
                 postMessage(TouchMessage.EVENT_MOVE, dx, dy);
             } else if (tapCount > 1) {
                 postActionMessage(TouchMessage.EVENT_ACTION_TAP, tapCount - 1);
                 postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
             } else {
+                // tapCount == 1
                 postMessage(TouchMessage.EVENT_START_DRAG, dx, dy);
             }
         }
@@ -80,7 +102,9 @@ public class MainActivity extends Activity {
         @Override
         public void onScroll(int tapCount, int dx, int dy) {
             MyApp.logD("onScroll: count=" + tapCount + ", dx=" + dx + ", dy=" + dy);
-            if (tapCount == 0) {
+            if (mInGrabMode) {
+                postMessage(TouchMessage.EVENT_DRAG, dx, dy);
+            } else if (tapCount == 0) {
                 postMessage(TouchMessage.EVENT_MOVE, dx, dy);
             } else {
                 postMessage(TouchMessage.EVENT_DRAG, dx, dy);
@@ -90,8 +114,8 @@ public class MainActivity extends Activity {
         @Override
         public void onLongPress(int tapCount, int x, int y) {
             MyApp.logD("onLongPress: count=" + tapCount + ", x=" + x + ", y=" + y);
+            performHapticFeedback(mTouchpadView);
             if (tapCount != 0) {
-                performHapticFeedback(mTouchpadView);
                 startActivityForResult(new Intent(MainActivity.this, ExtraActionActivity.class),
                         REQUEST_EXTRA_ACTION);
             } else {
