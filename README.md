@@ -25,16 +25,32 @@ The following page is helpful for eventX:
 
 For Nexus4, touch screen is /dev/input/event2, and Ratio X = 200%, and Ratio Y = 200%.
 
+#### How to examine eventX of touch screen and Ratios
+
+```
+adb shell getevent -i
+```
+
+This command lists up /dev/input/eventX with details.
+Touch screen device has `KEY (0001)` and `ABS (0003)` entries in `events` section.
+
+And a row labeled 0035 in `ABS (0003)` describes x-axis of touch screen.
+Range of x-axis is from `min` to `max`.
+You get a value for Ratio X in Wearable Pad settings by dividing the `max` by pixels of width of your screen.
+For Ratio Y, use `max` value in a row labeled 0036.
+
+If cannot be divided as percent, round down to the nearest decimal percent.
+
 ## Pad UI
 **IMPORTANT:**
 tap (down and up your finger) and longpress to exit this app or perform extra actions.
 
-For v0.2.0 or later
-
-|Handheld|Wear||
+### For v0.2.0 or later
+|Phone/Tablet|Wear||
 |---|---|---|
 |Tap|Tap||
 |Double Tap|Double Tap||
+|Grab Mode|Triple Tap|Press without keeping on pressing Wear|
 |Taps (Up to 15)|Taps||
 |Move Cursor|Swipe||
 |Swipe|Tap + Swipe|Swipe after single tap|
@@ -42,9 +58,19 @@ For v0.2.0 or later
 |Taps + Swipe|Tap + Taps + Swipe|One more tap|
 |Longpress|Long-Longpress|Keep pressing|
 
-Before v0.2.0
+#### Feature
+*   **Turn screen on automatically**
 
-|Handheld|Wear|
+    Send wake up signal to handheld when start Wearable Pad.
+
+*   **Grab mode**
+
+    Longpress without keeping on pressing Wearable Pad until another tap event.
+    You can move icon on homescreen and change area of text selection.
+
+### Before v0.2.0
+
+|Phone/Tablet|Wear|
 |---|---|
 |Tap|Tap|
 |Move Cursor|Swipe|
