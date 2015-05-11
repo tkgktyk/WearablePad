@@ -29,7 +29,6 @@ import android.widget.ImageView;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 import java.io.FileOutputStream;
@@ -225,17 +224,14 @@ public class MyService extends WearableListenerService {
                 Shell.SU.run(String.format("input swipe %d %d %d %d", x1, y1, x2, y2));
                 break;
         }
-        Stopwatch stopwatch = Stopwatch.createStarted();
         try {
             for (byte[] cmd : cmds) {
                 mInputDevice.write(cmd);
-//                fos.write((byte) '\n');
+//                mInputDevice.write((byte) '\n');
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            MyApp.logE(e);
         }
-        stopwatch.stop();
-        MyApp.logD("time: " + stopwatch);
     }
 
     private void performTap(ArrayList<byte[]> cmds) {
