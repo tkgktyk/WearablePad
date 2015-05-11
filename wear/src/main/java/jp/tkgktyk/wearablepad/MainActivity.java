@@ -114,10 +114,10 @@ public class MainActivity extends Activity {
         @Override
         public void onLongPress(int tapCount, int x, int y) {
             MyApp.logD("onLongPress: count=" + tapCount + ", x=" + x + ", y=" + y);
-            performHapticFeedback(mTouchpadView);
             if (tapCount != 0) {
                 startActivityForResult(new Intent(MainActivity.this, ExtraActionActivity.class),
                         REQUEST_EXTRA_ACTION);
+                performHapticFeedback(mTouchpadView);
             } else {
                 postMessage(TouchMessage.EVENT_PRESS);
             }
