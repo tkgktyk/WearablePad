@@ -50,7 +50,7 @@ tap (down and up your finger) and longpress to exit this app or perform extra ac
 |---|---|---|
 |Tap|Tap||
 |Double Tap|Double Tap||
-|Grab Mode|Triple Tap|Press without keeping on pressing Wear|
+|Grab Mode|Triple Tap|Press without keeping on pressing Wear (From v0.2.1)|
 |Taps (Up to 15)|Taps||
 |Move Cursor|Swipe||
 |Swipe|Tap + Swipe|Swipe after single tap|
