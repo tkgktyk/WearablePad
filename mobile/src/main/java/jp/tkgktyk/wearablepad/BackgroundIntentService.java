@@ -34,6 +34,7 @@ public class BackgroundIntentService extends IntentService {
     }
 
     public static void launchService(Context context) {
+        MyApp.logD();
         if (context == null) {
             return;
         }
