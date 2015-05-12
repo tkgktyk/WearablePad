@@ -1,5 +1,6 @@
-<manifest package="jp.tkgktyk.wearablepad"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    package="jp.tkgktyk.wearablepad"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
