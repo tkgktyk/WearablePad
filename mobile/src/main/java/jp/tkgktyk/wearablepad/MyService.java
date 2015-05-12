@@ -344,11 +344,10 @@ public class MyService extends WearableListenerService {
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         mMaxDistance = getResources().getDisplayMetrics().density * MAX_DISTANCE;
 
-        // after getting window manager
-        updateScreenRotation();
-
         // call after loading display size
         initCursorView();
+        // after init cursor
+        updateScreenRotation();
 
         try {
             mInputDevice = new FileOutputStream(mSettings.device);
@@ -368,6 +367,7 @@ public class MyService extends WearableListenerService {
     private void updateScreenRotation() {
         mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
         mScreenRotation = mWindowManager.getDefaultDisplay().getRotation();
+        updateCursorView();
     }
 
     private void initCursorView() {
