@@ -19,8 +19,6 @@ package jp.tkgktyk.wearablepadlib;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.support.annotation.StringRes;
 import android.text.TextUtils;
@@ -31,7 +29,8 @@ import android.widget.Toast;
  * Created by tkgktyk on 2015/05/02.
  */
 public abstract class BaseApplication extends Application {
-    private static final String PREF_KEY_VERSION_NAME = "key_version_name";
+    private static final String PREF_KEY_VERSION_NAME
+            = BaseApplication.class.getSimpleName() + ".key_version_name";
     private static Context sContext;
     private static boolean DEBUG;
 
@@ -114,19 +113,7 @@ public abstract class BaseApplication extends Application {
         }
 
         public MyVersion(Context context) {
-            // set current package's version
-            PackageManager pm = context.getPackageManager();
-            String version = null;
-            try {
-                PackageInfo info = pm.getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES);
-                version = info.versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-            if (version == null) {
-                version = "0.0.0";
-            }
-            set(version);
+            set(BuildConfig.VERSION_NAME);
         }
 
         public void set(String version) {
