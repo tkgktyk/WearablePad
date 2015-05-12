@@ -33,8 +33,8 @@ public class MyApp extends BaseApplication {
     protected void onVersionUpdated(MyVersion next, MyVersion old) {
         if (old.isOlderThan("0.2.1")) {
             PreferenceManager.getDefaultSharedPreferences(this).edit()
-                    .remove(MyService.KEY_LAST_CURSOR_X)
-                    .remove(MyService.KEY_LAST_CURSOR_Y)
+                    .remove(VirtualMouse.KEY_LAST_CURSOR_X)
+                    .remove(VirtualMouse.KEY_LAST_CURSOR_Y)
                     .commit();
         }
     }

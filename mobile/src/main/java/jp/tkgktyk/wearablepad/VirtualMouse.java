@@ -18,7 +18,6 @@ package jp.tkgktyk.wearablepad;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -30,8 +29,6 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.WearableListenerService;
 import com.google.common.collect.Lists;
 
 import java.io.FileOutputStream;
@@ -43,18 +40,12 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import eu.chainfire.libsuperuser.Shell;
-import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 /**
- * Created by tkgktyk on 2015/04/27.
- * <p/>
- * Basically use float point for scale (relative) value based on degree=0 (portraite),
- * and double point (x,y) for absolute value based on degree=0,
- * and int or short point (x,y) for rotated value.
- * Not need to transform for Cursor and Message position.
+ * Created by tkgktyk on 2015/05/12.
  */
-public class MyService extends WearableListenerService {
+public class VirtualMouse {
     /**
      * Input SubSystem
      */
@@ -74,6 +65,7 @@ public class MyService extends WearableListenerService {
     public static final String KEY_LAST_CURSOR_Y = "key_last_cursor_y";
     private static final float DEFAULT_CURSOR_POSITION = 0.5f;
 
+    private Context mContext;
     private PowerManager.WakeLock mWakeLock;
     private Settings mSettings;
 
@@ -94,6 +86,7 @@ public class MyService extends WearableListenerService {
     private Point getRotatedPointForInputDevice(PointF point) {
         float x = 0.0f;
         float y = 0.0f;
+        MyApp.logD("rotation = " + mScreenRotation);
         switch (mScreenRotation) {
             case Surface.ROTATION_0:
                 x = point.x;
@@ -142,11 +135,8 @@ public class MyService extends WearableListenerService {
         cmds.add(makeEvent(EV_SYN, SYN_REPORT, 0));
     }
 
-    @Override
-    public void onMessageReceived(MessageEvent messageEvent) {
+    synchronized public void onMessageReceived(TouchMessage message) {
         MyApp.logD("onMessageReceived");
-        MyApp.logD(messageEvent.getPath());
-        TouchMessage message = ParcelableUtil.unmarshall(messageEvent.getData(), TouchMessage.CREATOR);
         MyApp.logD("event: " + message.event + ", x: " + message.x + ", y: " + message.y);
 
         if (mInputDevice == null) {
@@ -223,7 +213,8 @@ public class MyService extends WearableListenerService {
                         Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_HOME);
                         break;
                     case TouchMessage.SYSTEM_UI_STATUSBAR:
-                        @SuppressWarnings("ResourceType") Object sbservice = getSystemService("statusbar");
+                        @SuppressWarnings("ResourceType") Object sbservice
+                                = mContext.getSystemService("statusbar");
                         try {
                             Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
                             Method showsb = statusbarManager.getMethod("expandNotificationsPanel");
@@ -328,51 +319,64 @@ public class MyService extends WearableListenerService {
         mLayoutParams.y = rotated.y - mDisplaySize.y / 2 + mCursorSize.y;
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    public void onCreate(Context context) {
+        mContext = context;
         MyApp.logD("onCreate");
 
-        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+        mSettings = new Settings(context);
+
+        reloadResources();
+    }
+
+    public void onConfigurationChanged() {
+        /**
+         * This method is called only when Configuration is changed.
+         * Configuration includes orientation but the orientation is only portrait or landscape.
+         * If change portrait <-> landscape, this method is called. However If rotate device
+         * 180 degree, isn't called because the orientation isn't changed (but degree is changed).
+         */
+        MyApp.logD();
+
+        reloadResources();
+    }
+
+    synchronized private void reloadResources() {
+        initWakeLock();
+
+        mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        mMaxDistance = mContext.getResources().getDisplayMetrics().density * MAX_DISTANCE;
+
+        mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
+        // call after loading display size
+        initCursorView();
+        // call after init cursor
+        mScreenRotation = mWindowManager.getDefaultDisplay().getRotation();
+        MyApp.logD("rotation = " + mScreenRotation);
+        updateCursorView();
+
+        openInputDevice();
+    }
+
+    private void initWakeLock() {
+        releaseWakeLock();
+        PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(
                 PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP |
                         PowerManager.ON_AFTER_RELEASE, "MyWakeLock");
         mWakeLock.acquire();
+    }
 
-        mSettings = new Settings(this);
-
-        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        mMaxDistance = getResources().getDisplayMetrics().density * MAX_DISTANCE;
-
-        // call after loading display size
-        initCursorView();
-        // after init cursor
-        updateScreenRotation();
-
-        try {
-            mInputDevice = new FileOutputStream(mSettings.device);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void releaseWakeLock() {
+        if (mWakeLock != null) {
+            mWakeLock.release();
+            mWakeLock = null;
         }
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        MyApp.logD();
-
-        updateScreenRotation();
-    }
-
-    private void updateScreenRotation() {
-        mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
-        mScreenRotation = mWindowManager.getDefaultDisplay().getRotation();
-        updateCursorView();
-    }
-
     private void initCursorView() {
+        removeCursor();
         // restore cursor position
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         mCursor.x = prefs.getFloat(KEY_LAST_CURSOR_X, DEFAULT_CURSOR_POSITION);
         mCursor.y = prefs.getFloat(KEY_LAST_CURSOR_Y, DEFAULT_CURSOR_POSITION);
         // make cursor
@@ -385,7 +389,7 @@ public class MyService extends WearableListenerService {
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
         setLayoutParams();
-        mCursorView = new ImageView(this);
+        mCursorView = new ImageView(mContext);
         mCursorView.setImageResource(android.R.drawable.ic_delete);
         mCursorView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -406,27 +410,39 @@ public class MyService extends WearableListenerService {
             mCursorView = null;
             mLayoutParams = null;
             // store cursor position
-            PreferenceManager.getDefaultSharedPreferences(this).edit()
+            PreferenceManager.getDefaultSharedPreferences(mContext).edit()
                     .putFloat(KEY_LAST_CURSOR_X, mCursor.x)
                     .putFloat(KEY_LAST_CURSOR_Y, mCursor.y)
                     .apply();
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        MyApp.logD("onDestroy");
+    private void openInputDevice() {
+        closeInputDevice();
+        try {
+            mInputDevice = new FileOutputStream(mSettings.device);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-        removeCursor();
-
+    private void closeInputDevice() {
         if (mInputDevice != null) {
             try {
                 mInputDevice.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            mInputDevice = null;
         }
+    }
+
+    public void onDestroy() {
+        MyApp.logD("onDestroy");
+
+        removeCursor();
+
+        closeInputDevice();
 
         mWakeLock.release();
     }
