@@ -41,7 +41,7 @@ public class BluetoothReceiverService extends Service {
         if (context == null) {
             return;
         }
-        context.startService(new Intent(context, PrepareInputSubsystemIntentService.class));
+        context.startService(new Intent(context, BluetoothReceiverService.class));
     }
 
     public static void stopService(Context context) {
@@ -49,7 +49,7 @@ public class BluetoothReceiverService extends Service {
         if (context == null) {
             return;
         }
-        context.stopService(new Intent(context, PrepareInputSubsystemIntentService.class));
+        context.stopService(new Intent(context, BluetoothReceiverService.class));
     }
 
     @Override
