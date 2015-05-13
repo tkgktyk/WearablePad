@@ -44,6 +44,11 @@ import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 /**
  * Created by tkgktyk on 2015/05/12.
+ * <p/>
+ * Basically use float point for scale (relative) value based on degree=0 (portraite),
+ * and double point (x,y) for absolute value based on degree=0,
+ * and int or short point (x,y) for rotated value. Need to transform for InputSubsystem by rotation,
+ * but not need for Cursor and Message position.
  */
 public class VirtualMouse {
     /**
@@ -319,11 +324,11 @@ public class VirtualMouse {
         mLayoutParams.y = rotated.y - mDisplaySize.y / 2 + mCursorSize.y;
     }
 
-    public void onCreate(Context context) {
+    public VirtualMouse(Context context, Settings settings) {
         mContext = context;
         MyApp.logD("onCreate");
 
-        mSettings = new Settings(context);
+        mSettings = settings;
 
         reloadResources();
     }

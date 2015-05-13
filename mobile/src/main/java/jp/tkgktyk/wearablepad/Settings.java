@@ -26,10 +26,17 @@ import android.support.annotation.StringRes;
  */
 
 public class Settings {
+    // Input Subsystem
     public final String device;
     public final float ratioX;
     public final float ratioY;
+    // Cursor
     public final float speed;
+    // Transfer Mode
+    public final boolean transferEnabled;
+    public final String destination;
+    public final boolean receiverEnabled;
+
     private Context mContext;
 
     public Settings(Context context) {
@@ -37,14 +44,18 @@ public class Settings {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        device = prefs.getString(key(R.string.key_input_device),
-                context.getString(R.string.default_input_device));
-        ratioX = getPercent(prefs, R.string.key_input_device_ratio_x,
-                R.string.default_input_device_ratio_x);
-        ratioY = getPercent(prefs, R.string.key_input_device_ratio_y,
-                R.string.default_input_device_ratio_y);
+        device = prefs.getString(key(R.string.key_input_subsystem),
+                context.getString(R.string.default_input_subsystem));
+        ratioX = getPercent(prefs, R.string.key_input_subsystem_ratio_x,
+                R.string.default_input_subsystem_ratio_x);
+        ratioY = getPercent(prefs, R.string.key_input_subsystem_ratio_y,
+                R.string.default_input_subsystem_ratio_y);
 
         speed = getPercent(prefs, R.string.key_cursor_speed, R.string.default_cursor_speed);
+
+        transferEnabled = prefs.getBoolean(key(R.string.key_transfer_mode_transfer_enabled), false);
+        destination = prefs.getString(key(R.string.key_transfer_mode_destination), "");
+        receiverEnabled = prefs.getBoolean(key(R.string.key_transfer_mode_receiver_enabled), false);
 
         mContext = null;
     }
@@ -57,5 +68,13 @@ public class Settings {
                              @StringRes int defaultId) {
         return Integer.parseInt(
                 prefs.getString(key(keyId), mContext.getString(defaultId))) / 100f;
+    }
+
+    public String getTransferAddress() {
+        final int n = 17;
+        if (destination.length() < n) {
+            return "";
+        }
+        return destination.substring(destination.length() - n);
     }
 }

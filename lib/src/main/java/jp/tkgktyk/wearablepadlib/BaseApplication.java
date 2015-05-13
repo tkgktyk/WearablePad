@@ -62,6 +62,10 @@ public abstract class BaseApplication extends Application {
         Log.e(getMethodName(), t.toString());
     }
 
+    public static void logE(String text, Throwable t) {
+        Log.e(getMethodName(), text, t);
+    }
+
     public static void showToast(@StringRes int id) {
         showToast(sContext.getString(id));
     }

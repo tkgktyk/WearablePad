@@ -16,58 +16,60 @@
 
 package jp.tkgktyk.wearablepad;
 
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
-
-import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.WearableListenerService;
 
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 /**
- * Created by tkgktyk on 2015/04/27.
+ * Created by tkgktyk on 2015/05/13.
  */
-public class WearableService extends WearableListenerService {
-
-    private Settings mSettings;
+public class BluetoothReceiverService extends Service {
+    private BluetoothHelper mBluetoothHelper;
+    private String mConnectedDeviceName;
 
     private VirtualMouse mVirtualMouse;
 
-    private BluetoothHelper mBluetoothHelper;
+    public static void startService(Context context) {
+        MyApp.logD();
+        if (context == null) {
+            return;
+        }
+        context.startService(new Intent(context, PrepareInputSubsystemIntentService.class));
+    }
+
+    public static void stopService(Context context) {
+        MyApp.logD();
+        if (context == null) {
+            return;
+        }
+        context.stopService(new Intent(context, PrepareInputSubsystemIntentService.class));
+    }
 
     @Override
-    synchronized public void onMessageReceived(MessageEvent messageEvent) {
-        MyApp.logD("onMessageReceived");
-        MyApp.logD(messageEvent.getPath());
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
-        if (mVirtualMouse != null) {
-            TouchMessage message = ParcelableUtil.unmarshall(messageEvent.getData(), TouchMessage.CREATOR);
-            mVirtualMouse.onMessageReceived(message);
-        }
-        if (mBluetoothHelper != null) {
-            // transfer over bluetooth
-            mBluetoothHelper.write(messageEvent.getData());
-        }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        mSettings = new Settings(this);
-        if (mSettings.transferEnabled) {
-            // BT is always on in this service
-            mBluetoothHelper = new BluetoothHelper(this, mHandler);
+        // BT is always on in this service
+        mBluetoothHelper = new BluetoothHelper(this, mHandler);
 
-            mBluetoothHelper.start();
-            mBluetoothHelper.connect(mSettings.getTransferAddress());
-
-            MyApp.showToast(getString(R.string.start_transfer_mode_s1, mSettings.destination));
-        } else {
-            mVirtualMouse = new VirtualMouse(this, mSettings);
-        }
+        mBluetoothHelper.start();
     }
 
     @Override
@@ -105,7 +107,13 @@ public class WearableService extends WearableListenerService {
                 case BluetoothHelper.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
                         case BluetoothHelper.STATE_CONNECTED:
-                            MyApp.showToast(getString(R.string.connected_to_s1, mSettings.destination));
+                            MyApp.showToast(getString(R.string.connected_to_s1, mConnectedDeviceName));
+                            if (mVirtualMouse != null) {
+                                mVirtualMouse.onDestroy();
+                                mVirtualMouse = null;
+                            }
+                            Context context = BluetoothReceiverService.this;
+                            mVirtualMouse = new VirtualMouse(context, new Settings(context));
                             break;
                         case BluetoothHelper.STATE_CONNECTING:
                             // TODO: show connecting text
@@ -113,17 +121,28 @@ public class WearableService extends WearableListenerService {
                         case BluetoothHelper.STATE_LISTEN:
                         case BluetoothHelper.STATE_NONE:
                             // TODO: show not connected text
+                            if (mVirtualMouse != null) {
+                                mVirtualMouse.onDestroy();
+                                mVirtualMouse = null;
+                            }
                             break;
                     }
                     break;
                 case BluetoothHelper.MESSAGE_WRITE:
-                    // no feedback
-                    break;
-                case BluetoothHelper.MESSAGE_READ:
                     // never reach
                     break;
+                case BluetoothHelper.MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    if (mVirtualMouse != null) {
+                        TouchMessage message = ParcelableUtil
+                                .unmarshall(readBuf, TouchMessage.CREATOR);
+                        mVirtualMouse.onMessageReceived(message);
+                    }
+                    break;
                 case BluetoothHelper.MESSAGE_DEVICE_NAME:
-                    // no feedback
+                    // save the connected device's name
+                    mConnectedDeviceName = msg.getData().getString(BluetoothHelper.DEVICE_NAME);
+                    MyApp.showToast(getString(R.string.connected_to_s1, mConnectedDeviceName));
                     break;
                 case BluetoothHelper.MESSAGE_TOAST:
                     MyApp.showToast(msg.getData().getString(BluetoothHelper.TOAST));

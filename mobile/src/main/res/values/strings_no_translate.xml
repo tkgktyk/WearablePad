@@ -1,7 +1,7 @@
 <resources>
-    <!-- Input Device -->
-    <string name="key_input_device" translatable="false">key_input_device</string>
-    <string-array name="input_devices" translatable="false">
+    <!-- Input Subsystem -->
+    <string name="key_input_subsystem" translatable="false">key_input_subsystem</string>
+    <string-array name="input_subsystems" translatable="false">
         <item>/dev/input/event0</item>
         <item>/dev/input/event1</item>
         <item>/dev/input/event2</item>
@@ -13,16 +13,21 @@
         <item>/dev/input/event8</item>
         <item>/dev/input/event9</item>
     </string-array>
-    <string name="default_input_device" translatable="false">/dev/input/event2</string>
-    <!-- Input Device Ratio -->
-    <string name="key_input_device_ratio_x">key_input_device_ratio_x</string>
-    <string name="default_input_device_ratio_x">200</string>
-    <string name="key_input_device_ratio_y">key_input_device_ratio_y</string>
-    <string name="default_input_device_ratio_y">200</string>
+    <string name="default_input_subsystem" translatable="false">/dev/input/event2</string>
+    <!-- Input Subsystem Ratio -->
+    <string name="key_input_subsystem_ratio_x">key_input_device_ratio_x</string>
+    <string name="default_input_subsystem_ratio_x">200</string>
+    <string name="key_input_subsystem_ratio_y">key_input_device_ratio_y</string>
+    <string name="default_input_subsystem_ratio_y">200</string>
 
     <!-- Cursor Speed -->
     <string name="key_cursor_speed">key_cursor_speed</string>
     <string name="default_cursor_speed">200</string>
+
+    <!-- Transfer Mode -->
+    <string name="key_transfer_mode_transfer_enabled">key_transfer_mode_transfer_enabled</string>
+    <string name="key_transfer_mode_destination">key_transfer_mode_destination</string>
+    <string name="key_transfer_mode_receiver_enabled">key_transfer_mode_receiver_enabled</string>
 
     <!-- About -->
     <string name="key_about">key_about</string>

@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
-        android:title="@string/title_input_device">
-        <!-- Input Device Number -->
+        android:title="@string/category_input_subsystem">
+        <!-- Select Input Device -->
         <ListPreference
-            android:defaultValue="@string/default_input_device"
-            android:entries="@array/input_devices"
-            android:entryValues="@array/input_devices"
-            android:key="@string/key_input_device"
-            android:title="@string/title_select_input_device"/>
+            android:defaultValue="@string/default_input_subsystem"
+            android:entries="@array/input_subsystems"
+            android:entryValues="@array/input_subsystems"
+            android:key="@string/key_input_subsystem"
+            android:title="@string/title_input_subsystem"/>
         <!-- Input Device Ratio -->
         <EditTextPreference
-            android:defaultValue="@string/default_input_device_ratio_y"
-            android:dialogMessage="@string/note_input_device_ratio"
+            android:defaultValue="@string/default_input_subsystem_ratio_y"
+            android:dialogMessage="@string/note_input_subsystem_ratio"
             android:inputType="number"
-            android:key="@string/key_input_device_ratio_x"
+            android:key="@string/key_input_subsystem_ratio_x"
             android:selectAllOnFocus="true"
-            android:title="@string/title_input_device_ratio_x"/>
+            android:title="@string/title_input_subsystem_ratio_x"/>
         <EditTextPreference
-            android:defaultValue="@string/default_input_device_ratio_y"
-            android:dialogMessage="@string/note_input_device_ratio"
+            android:defaultValue="@string/default_input_subsystem_ratio_y"
+            android:dialogMessage="@string/note_input_subsystem_ratio"
             android:inputType="number"
-            android:key="@string/key_input_device_ratio_y"
+            android:key="@string/key_input_subsystem_ratio_y"
             android:selectAllOnFocus="true"
-            android:title="@string/title_input_device_ratio_y"/>
+            android:title="@string/title_input_subsystem_ratio_y"/>
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/title_cursor">
+        android:title="@string/category_cursor">
         <!-- Cursor Speed -->
         <EditTextPreference
             android:defaultValue="@string/default_cursor_speed"
@@ -38,13 +38,33 @@
             android:title="@string/title_cursor_speed"/>
     </PreferenceCategory>
 
+    <!-- Transfer Mode -->
+    <PreferenceCategory
+        android:title="@string/category_transfer_mode">
+        <!-- Enable Transfer -->
+        <jp.tkgktyk.wearablepad.util.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_transfer_mode_transfer_enabled"
+            android:title="@string/title_transfer_mode_transfer_enabled"/>
+        <!-- Destination -->
+        <ListPreference
+            android:dependency="@string/key_transfer_mode_transfer_enabled"
+            android:key="@string/key_transfer_mode_destination"
+            android:title="@string/title_transfer_mode_destination"/>
+        <!-- Enable Receiver -->
+        <jp.tkgktyk.wearablepad.util.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_transfer_mode_receiver_enabled"
+            android:title="@string/title_transfer_mode_receiver_enabled"/>
+    </PreferenceCategory>
+
     <!-- Information -->
     <PreferenceCategory
-        android:title="@string/title_information">
-    <!-- About -->
-    <Preference
-        android:icon="@android:drawable/ic_menu_info_details"
-        android:key="@string/key_about"
-        android:title="@string/title_about"/>
+        android:title="@string/category_information">
+        <!-- About -->
+        <Preference
+            android:icon="@android:drawable/ic_menu_info_details"
+            android:key="@string/key_about"
+            android:title="@string/title_about"/>
     </PreferenceCategory>
 </PreferenceScreen>

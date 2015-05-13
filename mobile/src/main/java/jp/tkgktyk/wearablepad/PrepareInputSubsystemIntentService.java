@@ -28,9 +28,9 @@ import eu.chainfire.libsuperuser.Shell;
 /**
  * Created by tkgktyk on 2015/05/02.
  */
-public class BackgroundIntentService extends IntentService {
-    public BackgroundIntentService() {
-        super(BackgroundIntentService.class.getSimpleName());
+public class PrepareInputSubsystemIntentService extends IntentService {
+    public PrepareInputSubsystemIntentService() {
+        super(PrepareInputSubsystemIntentService.class.getSimpleName());
     }
 
     public static void launchService(Context context) {
@@ -38,7 +38,7 @@ public class BackgroundIntentService extends IntentService {
         if (context == null) {
             return;
         }
-        context.startService(new Intent(context, BackgroundIntentService.class));
+        context.startService(new Intent(context, PrepareInputSubsystemIntentService.class));
     }
 
     @Override

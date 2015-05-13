@@ -16,6 +16,9 @@
 
 package jp.tkgktyk.wearablepad;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -28,6 +31,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -55,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // request su
-        BackgroundIntentService.launchService(this);
+        PrepareInputSubsystemIntentService.launchService(this);
     }
 
     public static class BaseFragment extends PreferenceFragment {
@@ -91,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             if (index != -1) {
                 entry = pref.getEntries()[index];
             } else {
-                entry = "default";
+                entry = getString(R.string.not_selected);
             }
             pref.setSummary(getString(R.string.current_s1, entry));
         }
@@ -152,21 +159,66 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private void updatePreferences() {
-            // Settings
-            showListSummary(R.string.key_input_device, new Preference.OnPreferenceChangeListener() {
+            // Input Subsystem
+            showListSummary(R.string.key_input_subsystem, new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    BackgroundIntentService.launchService(preference.getContext());
+                    PrepareInputSubsystemIntentService.launchService(preference.getContext());
                     return true;
                 }
             });
-            showTextSummary(R.string.key_input_device_ratio_x, getString(R.string.unit_percent));
-            showTextSummary(R.string.key_input_device_ratio_y, getString(R.string.unit_percent));
+            showTextSummary(R.string.key_input_subsystem_ratio_x, getString(R.string.unit_percent));
+            showTextSummary(R.string.key_input_subsystem_ratio_y, getString(R.string.unit_percent));
+            // Cursor
             showTextSummary(R.string.key_cursor_speed, getString(R.string.unit_percent));
+            // Transfer Mode
+            Preference receiver = findPreference(R.string.key_transfer_mode_receiver_enabled);
+            receiver.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    boolean enabled = (Boolean) newValue;
+                    Context context = getActivity();
+                    if (enabled) {
+                        BluetoothReceiverService.startService(getActivity());
+                    } else {
+                        BluetoothReceiverService.stopService(getActivity());
+                    }
+                    return true;
+                }
+            });
             // About
             Preference about = findPreference(R.string.key_about);
             about.setSummary(getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME);
         }
-    }
 
+        @Override
+        public void onResume() {
+            super.onResume();
+
+            loadPairedDevices();
+        }
+
+        private void loadPairedDevices() {
+            BluetoothAdapter ba = BluetoothAdapter.getDefaultAdapter();
+            Set<BluetoothDevice> pairedDevices = ba.getBondedDevices();
+            ArrayList<String> entries = Lists.newArrayList();
+            ArrayList<String> entryValues = Lists.newArrayList();
+            if (pairedDevices.isEmpty()) {
+                entries.add(getString(R.string.none));
+                entryValues.add("");
+            } else {
+                for (BluetoothDevice device : pairedDevices) {
+                    String entry = device.getName() + " / " + device.getAddress();
+                    entries.add(entry);
+                    entryValues.add(entry);
+                }
+            }
+            ListPreference destination = (ListPreference)
+                    findPreference(R.string.key_transfer_mode_destination);
+            destination.setEntries(entries.toArray(new String[0]));
+            destination.setEntryValues(entryValues.toArray(new String[0]));
+            // update summary
+            showListSummary(R.string.key_transfer_mode_destination);
+        }
+    }
 }
