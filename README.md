@@ -68,6 +68,12 @@ tap (down and up your finger) and longpress to exit this app or perform extra ac
     Longpress without keeping on pressing Wearable Pad until another tap event.
     You can move icon on homescreen and change area of text selection.
 
+*   **Transfer mode (from v0.3.0)**
+
+    Transfer touch event to another Android device.
+
+    Wear ---> paired Phone (Transfer) ---> Tablet (Receiver)
+
 ### Before v0.2.0
 
 |Phone/Tablet|Wear|
