@@ -5,6 +5,9 @@ There are some apps to control your PC from Android Wear via Android phone/table
 However I couldn't find apps to control Android phone from Android wear.
 This is just a challenge to do that.
 
+![pad](wear/images/screenshot_pad.png)
+![action](wear/images/screenshot_action.png)
+
 [Movie on Youtube](https://youtu.be/G9Vo8Ck-Mno)
 
 ## Solution
@@ -43,7 +46,7 @@ If cannot be divided as percent, round down to the nearest decimal percent.
 
 ## Pad UI
 **IMPORTANT:**
-tap (down and up your finger) and longpress to exit this app or perform extra actions.
+Tap and longpress to exit Wearable Pad or perform extra actions.
 
 ### For v0.2.0 or later
 |Phone/Tablet|Wear||
