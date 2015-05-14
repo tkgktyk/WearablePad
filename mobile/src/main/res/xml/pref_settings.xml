@@ -65,6 +65,10 @@
         <Preference
             android:icon="@android:drawable/ic_menu_info_details"
             android:key="@string/key_about"
-            android:title="@string/title_about"/>
+            android:title="@string/title_about">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/tkgktyk/WearablePad/blob/master/README.md"/>
+        </Preference>
     </PreferenceCategory>
 </PreferenceScreen>

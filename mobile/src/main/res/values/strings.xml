@@ -1,9 +1,15 @@
 <resources>
     <string name="app_name">Wearable Pad</string>
 
-    <!-- Wearable Service -->
-    <string name="start_transfer_mode_s1">Start transfer mode: %1$s</string>
+    <!-- Service -->
+    <string name="transfer">Transfer</string>
+    <string name="start_transfer_service">Start transfer service</string>
+    <string name="receiver">Receiver</string>
+    <string name="start_receiver_service">Start receiver service</string>
+    <string name="not_connected">Not connected</string>
+    <string name="connecting">Connecting</string>
     <string name="connected_to_s1">Connected to %1$s</string>
+    <string name="connected_from_s1">Connected from %1$s</string>
 
     <!-- Settings -->
     <string name="current_s1">Current: %1$s</string>

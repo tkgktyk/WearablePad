@@ -18,13 +18,14 @@ package jp.tkgktyk.wearablepad;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AppCompatActivity;
@@ -35,9 +36,12 @@ import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import jp.tkgktyk.wearablepad.util.SwitchPreference;
 
 /**
  * Created by tkgktyk on 2015/04/27.
@@ -124,6 +128,23 @@ public class MainActivity extends AppCompatActivity {
                     et.getText());
         }
 
+        protected void setUpSwitch(@StringRes int id, final OnSwitchChangedListener listener) {
+            final SwitchPreference sw = (SwitchPreference) findPreference(id);
+            sw.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    boolean enabled = (Boolean) newValue;
+                    listener.onChanged(sw, enabled);
+                    return true;
+                }
+            });
+            sw.getOnPreferenceChangeListener().onPreferenceChange(sw, sw.isChecked());
+        }
+
+        protected interface OnSwitchChangedListener {
+            void onChanged(SwitchPreference sw, boolean enabled);
+        }
+
         protected void openActivity(@StringRes int id, final Class<?> cls) {
             openActivity(id, cls, null);
         }
@@ -153,9 +174,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            boolean locked = lockTransferMode();
             addPreferencesFromResource(R.xml.pref_settings);
 
             updatePreferences();
+            if (locked) {
+                findPreference(R.string.key_transfer_mode_transfer_enabled).setEnabled(false);
+                findPreference(R.string.key_transfer_mode_receiver_enabled).setEnabled(false);
+            }
         }
 
         private void updatePreferences() {
@@ -172,18 +198,14 @@ public class MainActivity extends AppCompatActivity {
             // Cursor
             showTextSummary(R.string.key_cursor_speed, getString(R.string.unit_percent));
             // Transfer Mode
-            Preference receiver = findPreference(R.string.key_transfer_mode_receiver_enabled);
-            receiver.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            setUpSwitch(R.string.key_transfer_mode_receiver_enabled, new OnSwitchChangedListener() {
                 @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    boolean enabled = (Boolean) newValue;
-                    Context context = getActivity();
+                public void onChanged(SwitchPreference sw, boolean enabled) {
                     if (enabled) {
                         BluetoothReceiverService.startService(getActivity());
                     } else {
                         BluetoothReceiverService.stopService(getActivity());
                     }
-                    return true;
                 }
             });
             // About
@@ -219,6 +241,28 @@ public class MainActivity extends AppCompatActivity {
             destination.setEntryValues(entryValues.toArray(new String[0]));
             // update summary
             showListSummary(R.string.key_transfer_mode_destination);
+        }
+
+        private boolean lockTransferMode() {
+            try {
+                ApplicationInfo ai = getActivity().getPackageManager()
+                        .getApplicationInfo(getActivity().getPackageName(), 0);
+                ZipFile zf = new ZipFile(ai.sourceDir);
+                ZipEntry ze = zf.getEntry("classes.dex");
+                long time = ze.getTime();
+                zf.close();
+                long elapsed = System.currentTimeMillis() - time;
+                if (elapsed >= (long) (60 * 60 * 24 * 30) * 1000) {
+                    // lock transfer mode
+                    PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
+                            .putBoolean(getString(R.string.key_transfer_mode_transfer_enabled), false)
+                            .putBoolean(getString(R.string.key_transfer_mode_receiver_enabled), false)
+                            .commit();
+                    return true;
+                }
+            } catch (Exception e) {
+            }
+            return false;
         }
     }
 }

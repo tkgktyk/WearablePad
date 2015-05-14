@@ -19,10 +19,12 @@ package jp.tkgktyk.wearablepad;
 import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.StringRes;
 
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import jp.tkgktyk.wearablepad.util.ServiceNotification;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
@@ -36,6 +38,8 @@ public class WearableService extends WearableListenerService {
     private VirtualMouse mVirtualMouse;
 
     private BluetoothHelper mBluetoothHelper;
+
+    private ServiceNotification mServiceNotification;
 
     @Override
     synchronized public void onMessageReceived(MessageEvent messageEvent) {
@@ -63,8 +67,8 @@ public class WearableService extends WearableListenerService {
 
             mBluetoothHelper.start();
             mBluetoothHelper.connect(mSettings.getTransferAddress());
-
-            MyApp.showToast(getString(R.string.start_transfer_mode_s1, mSettings.destination));
+            mServiceNotification = new ServiceNotification(this, R.string.transfer);
+            MyApp.showToast(R.string.start_transfer_service);
         } else {
             mVirtualMouse = new VirtualMouse(this, mSettings);
         }
@@ -89,9 +93,28 @@ public class WearableService extends WearableListenerService {
 
         if (mVirtualMouse != null) {
             mVirtualMouse.onDestroy();
+            mVirtualMouse = null;
         }
         if (mBluetoothHelper != null) {
             mBluetoothHelper.stop();
+            mBluetoothHelper = null;
+        }
+
+        if (mServiceNotification != null) {
+            mServiceNotification.stop();
+            mServiceNotification = null;
+        }
+    }
+
+    void updateNotification(@StringRes int textId) {
+        if (mServiceNotification != null) {
+            mServiceNotification.updateText(textId);
+        }
+    }
+
+    private void updateNotification(String text) {
+        if (mServiceNotification != null) {
+            mServiceNotification.updateText(text);
         }
     }
 
@@ -105,14 +128,15 @@ public class WearableService extends WearableListenerService {
                 case BluetoothHelper.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
                         case BluetoothHelper.STATE_CONNECTED:
-                            MyApp.showToast(getString(R.string.connected_to_s1, mSettings.destination));
+                            updateNotification(
+                                    getString(R.string.connected_to_s1, mSettings.destination));
                             break;
                         case BluetoothHelper.STATE_CONNECTING:
-                            // TODO: show connecting text
+                            updateNotification(R.string.connecting);
                             break;
                         case BluetoothHelper.STATE_LISTEN:
                         case BluetoothHelper.STATE_NONE:
-                            // TODO: show not connected text
+                            updateNotification(R.string.not_connected);
                             break;
                     }
                     break;
@@ -126,7 +150,7 @@ public class WearableService extends WearableListenerService {
                     // no feedback
                     break;
                 case BluetoothHelper.MESSAGE_TOAST:
-                    MyApp.showToast(msg.getData().getString(BluetoothHelper.TOAST));
+//                    updateNotification(msg.getData().getString(BluetoothHelper.TOAST));
                     break;
             }
         }

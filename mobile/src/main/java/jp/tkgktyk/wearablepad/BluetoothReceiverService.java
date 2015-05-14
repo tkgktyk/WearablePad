@@ -23,7 +23,9 @@ import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.annotation.StringRes;
 
+import jp.tkgktyk.wearablepad.util.ServiceNotification;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
@@ -35,6 +37,8 @@ public class BluetoothReceiverService extends Service {
     private String mConnectedDeviceName;
 
     private VirtualMouse mVirtualMouse;
+
+    private ServiceNotification mServiceNotification;
 
     public static void startService(Context context) {
         MyApp.logD();
@@ -70,6 +74,9 @@ public class BluetoothReceiverService extends Service {
         mBluetoothHelper = new BluetoothHelper(this, mHandler);
 
         mBluetoothHelper.start();
+
+        mServiceNotification = new ServiceNotification(this, R.string.receiver);
+        MyApp.showToast(R.string.start_receiver_service);
     }
 
     @Override
@@ -91,9 +98,28 @@ public class BluetoothReceiverService extends Service {
 
         if (mVirtualMouse != null) {
             mVirtualMouse.onDestroy();
+            mVirtualMouse = null;
         }
         if (mBluetoothHelper != null) {
             mBluetoothHelper.stop();
+            mBluetoothHelper =null;
+        }
+
+        if (mServiceNotification != null) {
+            mServiceNotification.stop();
+            mServiceNotification = null;
+        }
+    }
+
+    private void updateNotification(@StringRes int textId) {
+        if (mServiceNotification != null) {
+            mServiceNotification.updateText(textId);
+        }
+    }
+
+    private void updateNotification(String text) {
+        if (mServiceNotification != null) {
+            mServiceNotification.updateText(text);
         }
     }
 
@@ -106,8 +132,10 @@ public class BluetoothReceiverService extends Service {
             switch (msg.what) {
                 case BluetoothHelper.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
-                        case BluetoothHelper.STATE_CONNECTED:
-                            MyApp.showToast(getString(R.string.connected_to_s1, mConnectedDeviceName));
+                        case BluetoothHelper.STATE_CONNECTED: {
+                            String text = getString(R.string.connected_from_s1, mConnectedDeviceName);
+                            updateNotification(text);
+                            MyApp.showToast(text);
                             if (mVirtualMouse != null) {
                                 mVirtualMouse.onDestroy();
                                 mVirtualMouse = null;
@@ -115,12 +143,13 @@ public class BluetoothReceiverService extends Service {
                             Context context = BluetoothReceiverService.this;
                             mVirtualMouse = new VirtualMouse(context, new Settings(context));
                             break;
+                        }
                         case BluetoothHelper.STATE_CONNECTING:
-                            // TODO: show connecting text
+                            updateNotification(R.string.connecting);
                             break;
                         case BluetoothHelper.STATE_LISTEN:
                         case BluetoothHelper.STATE_NONE:
-                            // TODO: show not connected text
+                            updateNotification(R.string.not_connected);
                             if (mVirtualMouse != null) {
                                 mVirtualMouse.onDestroy();
                                 mVirtualMouse = null;
@@ -142,10 +171,9 @@ public class BluetoothReceiverService extends Service {
                 case BluetoothHelper.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
                     mConnectedDeviceName = msg.getData().getString(BluetoothHelper.DEVICE_NAME);
-                    MyApp.showToast(getString(R.string.connected_to_s1, mConnectedDeviceName));
                     break;
                 case BluetoothHelper.MESSAGE_TOAST:
-                    MyApp.showToast(msg.getData().getString(BluetoothHelper.TOAST));
+//                    updateNotification(msg.getData().getString(BluetoothHelper.TOAST));
                     break;
             }
         }

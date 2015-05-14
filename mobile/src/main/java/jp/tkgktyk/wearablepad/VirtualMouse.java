@@ -64,7 +64,7 @@ public class VirtualMouse {
 
     private static final short SYN_REPORT = 0;
 
-    private static final int MAX_DISTANCE = 100;
+    private static final int MAX_DISTANCE = 50;
 
     public static final String KEY_LAST_CURSOR_X = "key_last_cursor_x";
     public static final String KEY_LAST_CURSOR_Y = "key_last_cursor_y";
