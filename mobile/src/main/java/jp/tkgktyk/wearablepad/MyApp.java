@@ -19,7 +19,6 @@ package jp.tkgktyk.wearablepad;
 import android.content.pm.ApplicationInfo;
 import android.preference.PreferenceManager;
 
-import eu.chainfire.libsuperuser.Shell;
 import jp.tkgktyk.wearablepadlib.BaseApplication;
 
 /**
@@ -49,14 +48,6 @@ public class MyApp extends BaseApplication {
                     .remove(VirtualMouse.KEY_LAST_CURSOR_X)
                     .remove(VirtualMouse.KEY_LAST_CURSOR_Y)
                     .commit();
-        }
-    }
-
-    public static void run(String command) {
-        if (mIsSystemApp) {
-            Shell.SH.run(command);
-        } else {
-            Shell.SU.run(command);
         }
     }
 }

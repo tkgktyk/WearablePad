@@ -2,6 +2,7 @@
     <string name="app_name">Wearable Pad</string>
 
     <!-- Service -->
+    <string name="cannot_execute_su">Can\'t execute su</string>
     <string name="cannot_access_input_subsystem">Can\'t access Input Subsystem</string>
     <string name="transfer">Transfer</string>
     <string name="start_transfer_service">Start transfer service</string>

@@ -31,6 +31,5 @@ dependencies {
     compile 'com.google.android.gms:play-services:7.3.0'
     compile 'com.jakewharton:butterknife:5.1.1'
     compile 'com.google.guava:guava:18.0'
-    compile 'eu.chainfire:libsuperuser:1.0.0.+'
     compile project(':lib')
 }

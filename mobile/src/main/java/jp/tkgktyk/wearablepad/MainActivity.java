@@ -64,9 +64,6 @@ public class MainActivity extends AppCompatActivity {
                     .replace(R.id.container, new SettingsFragment())
                     .commit();
         }
-
-        // request su
-        PrepareInputSubsystemIntentService.launchService(this);
     }
 
     public static class BaseFragment extends PreferenceFragment {
@@ -186,13 +183,7 @@ public class MainActivity extends AppCompatActivity {
 
         private void updatePreferences() {
             // Input Subsystem
-            showListSummary(R.string.key_input_subsystem, new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    PrepareInputSubsystemIntentService.launchService(preference.getContext());
-                    return true;
-                }
-            });
+            showListSummary(R.string.key_input_subsystem);
             showTextSummary(R.string.key_input_subsystem_ratio_x, getString(R.string.unit_percent));
             showTextSummary(R.string.key_input_subsystem_ratio_y, getString(R.string.unit_percent));
             // Cursor

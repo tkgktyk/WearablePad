@@ -31,6 +31,7 @@ import android.widget.ImageView;
 
 import com.google.common.collect.Lists;
 
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -83,7 +84,9 @@ public class VirtualMouse {
     private Point mCursorSize = new Point();
     private WindowManager.LayoutParams mLayoutParams;
 
-    private FileOutputStream mInputDevice;
+    private Process mSuProcess;
+    private DataOutputStream mSuStdin;
+    private FileOutputStream mInputSubsystem;
 
     private int mScreenRotation;
 
@@ -98,7 +101,7 @@ public class VirtualMouse {
         }
     };
 
-    private Point getRotatedPointForInputDevice(PointF point) {
+    private Point getRotatedPointForInputSubsystem(PointF point) {
         float x = 0.0f;
         float y = 0.0f;
         MyApp.logD("rotation = " + mScreenRotation);
@@ -134,7 +137,7 @@ public class VirtualMouse {
     }
 
     private void performPress(PointF point, ArrayList<byte[]> cmds) {
-        final Point rotated = getRotatedPointForInputDevice(point);
+        final Point rotated = getRotatedPointForInputSubsystem(point);
         MyApp.logD(rotated.toString());
         cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_X, rotated.x));
         cmds.add(makeEvent(EV_ABS, ABS_MT_POSITION_Y, rotated.y));
@@ -154,8 +157,8 @@ public class VirtualMouse {
         MyApp.logD("onMessageReceived");
         MyApp.logD("event: " + message.event + ", x: " + message.x + ", y: " + message.y);
 
-        if (mInputDevice == null) {
-            MyApp.logD("mInputDevice is null");
+        if (mInputSubsystem == null) {
+            MyApp.logD("mInputSubsystem is null");
             return;
         }
 
@@ -219,13 +222,13 @@ public class VirtualMouse {
             case TouchMessage.EVENT_ACTION_SYSTEM_UI:
                 switch (message.getActionValue()) {
                     case TouchMessage.SYSTEM_UI_BACK:
-                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_BACK);
+                        suAsync("input keyevent " + KeyEvent.KEYCODE_BACK);
                         break;
                     case TouchMessage.SYSTEM_UI_TASKS:
-                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
+                        suAsync("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
                         break;
                     case TouchMessage.SYSTEM_UI_HOME:
-                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_HOME);
+                        suAsync("input keyevent " + KeyEvent.KEYCODE_HOME);
                         break;
                     case TouchMessage.SYSTEM_UI_STATUSBAR:
                         @SuppressWarnings("ResourceType") Object sbservice
@@ -248,23 +251,23 @@ public class VirtualMouse {
                 break;
             case TouchMessage.EVENT_ACTION_SWIPE:
                 final Point point1 = getRotatedPointForCursor(mCursor);
-                final int div = 3;
+                final float scale = 0.4f;
                 final Point point2 = new Point(point1);
                 switch (message.getActionValue()) {
                     case TouchMessage.SWIPE_LEFT_TO_RIGHT:
-                        point2.x = clamp(point1.x + mDisplaySize.x / div, mDisplaySize.x);
+                        point2.x = clamp(point1.x + (int) (mDisplaySize.x * scale), mDisplaySize.x);
                         break;
                     case TouchMessage.SWIPE_TOP_TO_BOTTOM:
-                        point2.y = clamp(point1.y + mDisplaySize.y / div, mDisplaySize.y);
+                        point2.y = clamp(point1.y + (int) (mDisplaySize.y * scale), mDisplaySize.y);
                         break;
                     case TouchMessage.SWIPE_RIGHT_TO_LEFT:
-                        point2.x = clamp(point1.x - mDisplaySize.x / div, mDisplaySize.x);
+                        point2.x = clamp(point1.x - (int) (mDisplaySize.x * scale), mDisplaySize.x);
                         break;
                     case TouchMessage.SWIPE_BOTTOM_TO_TOP:
-                        point2.y = clamp(point1.y - mDisplaySize.y / div, mDisplaySize.y);
+                        point2.y = clamp(point1.y - (int) (mDisplaySize.y * scale), mDisplaySize.y);
                         break;
                 }
-                MyApp.run(String.format("input swipe %d %d %d %d",
+                suAsync(String.format("input swipe %d %d %d %d",
                         point1.x, point1.y, point2.x, point2.y));
                 break;
         }
@@ -276,7 +279,7 @@ public class VirtualMouse {
                     sb.append(String.format("%02x", b & 0xff));
                 }
                 MyApp.logD(sb.toString());
-                mInputDevice.write(cmd);
+                mInputSubsystem.write(cmd);
             }
         } catch (IOException e) {
             MyApp.logE(e);
@@ -335,22 +338,6 @@ public class VirtualMouse {
 
         mSettings = settings;
 
-        reloadResources();
-    }
-
-    public void onConfigurationChanged() {
-        /**
-         * This method is called only when Configuration is changed.
-         * Configuration includes orientation but the orientation is only portrait or landscape.
-         * If change portrait <-> landscape, this method is called. However If rotate device
-         * 180 degree, isn't called because the orientation isn't changed (but degree is changed).
-         */
-        MyApp.logD();
-
-        reloadResources();
-    }
-
-    synchronized private void reloadResources() {
         initWakeLock();
 
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
@@ -359,16 +346,32 @@ public class VirtualMouse {
         mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
         // call after loading display size
         initCursorView();
-        // call after init cursor
+        updateScreenRotation();
+
+        openSuProcess();
+        openInputSubsystem();
+    }
+
+    public void onConfigurationChanged() {
+        /**
+         * This method is called only when Configuration is changed.
+         * Configuration includes orientation but the orientation is only portrait or landscape.
+         * If change portrait <-> landscape, this method is called. However If rotate device
+         * 180 degree, isn't called because the orientation isn't changed, only degree is changed).
+         */
+        MyApp.logD();
+
+        updateScreenRotation();
+    }
+
+    synchronized private void updateScreenRotation() {
+        mWindowManager.getDefaultDisplay().getRealSize(mDisplaySize);
         mScreenRotation = mWindowManager.getDefaultDisplay().getRotation();
         MyApp.logD("rotation = " + mScreenRotation);
         updateCursorView();
-
-        openInputDevice();
     }
 
     private void initWakeLock() {
-        releaseWakeLock();
         PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(
                 PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP |
@@ -384,7 +387,6 @@ public class VirtualMouse {
     }
 
     private void initCursorView() {
-        removeCursor();
         // restore cursor position
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         mCursor.x = prefs.getFloat(KEY_LAST_CURSOR_X, DEFAULT_CURSOR_POSITION);
@@ -426,24 +428,84 @@ public class VirtualMouse {
         }
     }
 
-    private void openInputDevice() {
-        closeInputDevice();
+    private void openSuProcess() {
         try {
-            mInputDevice = new FileOutputStream(mSettings.device);
+            mSuProcess = Runtime.getRuntime().exec("su");
         } catch (IOException e) {
-            MyApp.showToast(R.string.cannot_access_input_subsystem);
+            MyApp.logE(e);
+            MyApp.showToast(R.string.cannot_execute_su);
+        }
+        if (mSuProcess != null) {
+            mSuStdin = new DataOutputStream(mSuProcess.getOutputStream());
+        }
+    }
+
+    private void suAsync(String command) {
+        try {
+            mSuStdin.writeBytes(command + "\n");
+            mSuStdin.flush();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void closeInputDevice() {
-        if (mInputDevice != null) {
+    private void closeSuProcess() {
+        if (mSuStdin != null) {
             try {
-                mInputDevice.close();
+                mSuStdin.writeBytes("exit\n");
+                mSuStdin.flush();
+                mSuStdin.close();
+                mSuProcess.waitFor();
+            } catch (IOException e) {
+                MyApp.logE(e);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void suSync(String command) {
+        try {
+            Process process = Runtime.getRuntime().exec("su");
+            DataOutputStream os = new DataOutputStream(process.getOutputStream());
+            os.writeBytes(command + "\n");
+            os.writeBytes("exit\n");
+            os.flush();
+            os.close();
+            process.waitFor();
+        } catch (IOException e) {
+            MyApp.logE(e);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void openInputSubsystem() {
+        try {
+            suSync("supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
+            // Owner of Input Subsystem is root, is not system.
+            // Therefore cannot access without changing permission even if system app.
+            suSync("chmod 666 " + mSettings.inputSubsystem);
+            mInputSubsystem = new FileOutputStream(mSettings.inputSubsystem);
+            suAsync("chmod 660 " + mSettings.inputSubsystem);
+        } catch (IOException e) {
+            MyApp.showToast(R.string.cannot_access_input_subsystem);
+            e.printStackTrace();
+            suAsync("chmod 660 " + mSettings.inputSubsystem);
+            suAsync("supolicy --live \"deny appdomain input_device dir { ioctl read getattr search open }\" \"deny appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
+        }
+    }
+
+    private void closeInputSubsystem() {
+        if (mInputSubsystem != null) {
+            try {
+                mInputSubsystem.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mInputDevice = null;
+            mInputSubsystem = null;
+            suAsync("supolicy --live \"deny appdomain input_device dir { ioctl read getattr search open }\" \"deny appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
         }
     }
 
@@ -452,9 +514,10 @@ public class VirtualMouse {
 
         removeCursor();
 
-        closeInputDevice();
+        closeInputSubsystem();
+        closeSuProcess();
 
-        mWakeLock.release();
+        releaseWakeLock();
     }
 
 }

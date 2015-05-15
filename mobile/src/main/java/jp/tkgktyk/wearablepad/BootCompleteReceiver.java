@@ -26,8 +26,6 @@ import android.content.Intent;
 public class BootCompleteReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        PrepareInputSubsystemIntentService.launchService(context);
-
         Settings settings = new Settings(context);
         if (settings.receiverEnabled) {
             BluetoothReceiverService.startService(context);

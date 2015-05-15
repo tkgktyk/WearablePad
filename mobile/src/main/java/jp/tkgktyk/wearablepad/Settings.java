@@ -27,7 +27,7 @@ import android.support.annotation.StringRes;
 
 public class Settings {
     // Input Subsystem
-    public final String device;
+    public final String inputSubsystem;
     public final float ratioX;
     public final float ratioY;
     // Cursor
@@ -44,7 +44,7 @@ public class Settings {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        device = prefs.getString(key(R.string.key_input_subsystem),
+        inputSubsystem = prefs.getString(key(R.string.key_input_subsystem),
                 context.getString(R.string.default_input_subsystem));
         ratioX = getPercent(prefs, R.string.key_input_subsystem_ratio_x,
                 R.string.default_input_subsystem_ratio_x);
