@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.ImageButton;
@@ -170,10 +169,7 @@ public class MainActivity extends Activity {
     }
 
     private void postMessage(byte event, int x, int y) {
-        final TouchMessage message = new TouchMessage();
-        message.event = event;
-        message.x = (short) x;
-        message.y = (short) y;
+        final TouchMessage message = new TouchMessage(event, (short) x, (short) y);
         postMessage(message);
     }
 
@@ -193,9 +189,15 @@ public class MainActivity extends Activity {
 
         initClient();
         initMessageQueue();
+    }
 
-        final TouchMessage message = new TouchMessage();
-        postMessage(message);
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // I don't know why, first message is failed on handheld sometimes.
+        postMessage(TouchMessage.EVENT_SHOW_CURSOR);
+        postMessage(TouchMessage.EVENT_SHOW_CURSOR);
     }
 
     private void initClient() {
@@ -203,24 +205,24 @@ public class MainActivity extends Activity {
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle bundle) {
-                        Log.d("MyFragment", "onConnected");
+                        MyApp.logD("onConnected");
                     }
 
                     @Override
                     public void onConnectionSuspended(int i) {
-                        Log.d("MyFragment", "onConnectionSuspended");
+                        MyApp.logD("onConnectionSuspended");
                     }
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(ConnectionResult connectionResult) {
-                        Log.d("MyFragment", "onConnectionFailed");
+                        MyApp.logD("onConnectionFailed");
+                        MyApp.showToast(R.string.cannot_connect_to_handheld);
                     }
                 })
                 .addApi(Wearable.API)
                 .build();
         mClient.connect();
-
     }
 
     private void initMessageQueue() {
@@ -249,7 +251,6 @@ public class MainActivity extends Activity {
                         }
                         switch (lastMessage.event) {
                             case TouchMessage.EVENT_MOVE:
-                            case TouchMessage.EVENT_START_DRAG:
                             case TouchMessage.EVENT_DRAG:
                                 SystemClock.sleep(100);
                                 break;
@@ -285,7 +286,7 @@ public class MainActivity extends Activity {
             }
 
             private void send(TouchMessage message) {
-                Log.d("MyService", "event: " + message.event + ", x: " + message.x + ", y: " + message.y);
+                MyApp.logD("event: " + message.event + ", x: " + message.x + ", y: " + message.y);
                 final byte[] data = ParcelableUtil.marshall(message);
                 mNodes = Wearable.NodeApi.getConnectedNodes(mClient).await();
                 for (Node node : mNodes.getNodes()) {
@@ -296,7 +297,7 @@ public class MainActivity extends Activity {
                             data)
                             .await();
                     if (!result.getStatus().isSuccess()) {
-                        Log.d("onTouchEvent", "isSuccess is false");
+                        MyApp.logD("isSuccess is false");
                     }
                 }
             }

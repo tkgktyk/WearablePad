@@ -16,14 +16,27 @@
 
 package jp.tkgktyk.wearablepad;
 
+import android.content.pm.ApplicationInfo;
 import android.preference.PreferenceManager;
 
+import eu.chainfire.libsuperuser.Shell;
 import jp.tkgktyk.wearablepadlib.BaseApplication;
 
 /**
  * Created by tkgktyk on 2015/05/02.
  */
 public class MyApp extends BaseApplication {
+    private static boolean mIsSystemApp;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        final int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+        mIsSystemApp = (getApplicationInfo().flags & mask) != 0;
+        MyApp.logD("mIsSystemApp = " + mIsSystemApp);
+    }
+
     @Override
     protected boolean isDebug() {
         return BuildConfig.DEBUG;
@@ -36,6 +49,14 @@ public class MyApp extends BaseApplication {
                     .remove(VirtualMouse.KEY_LAST_CURSOR_X)
                     .remove(VirtualMouse.KEY_LAST_CURSOR_Y)
                     .commit();
+        }
+    }
+
+    public static void run(String command) {
+        if (mIsSystemApp) {
+            Shell.SH.run(command);
+        } else {
+            Shell.SU.run(command);
         }
     }
 }

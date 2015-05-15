@@ -23,8 +23,6 @@ import android.content.Intent;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import eu.chainfire.libsuperuser.Shell;
-
 /**
  * Created by tkgktyk on 2015/05/02.
  */
@@ -49,11 +47,13 @@ public class PrepareInputSubsystemIntentService extends IntentService {
             new FileOutputStream(settings.device).close();
         } catch (IOException e) {
             // SELinux permissive only for /dev/input
-            Shell.SU.run("supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
+            MyApp.run("supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
             try {
                 new FileOutputStream(settings.device).close();
             } catch (IOException e1) {
-                Shell.SU.run("chmod 666 " + settings.device);
+                // Owner of Input Subsystem is root, is not system.
+                // Therefore cannot access without changing permission even if system app.
+                MyApp.run("chmod 666 " + settings.device);
             }
         }
     }

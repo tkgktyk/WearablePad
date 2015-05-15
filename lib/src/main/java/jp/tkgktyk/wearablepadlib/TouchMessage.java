@@ -99,6 +99,16 @@ public class TouchMessage implements Parcelable {
     public TouchMessage() {
     }
 
+    public TouchMessage(byte event) {
+        this.event = event;
+    }
+
+    public TouchMessage(byte event, short x, short y) {
+        this.event = event;
+        this.x = x;
+        this.y = y;
+    }
+
     private short readShort(Parcel source) {
         final byte[] buf = new byte[Short.SIZE / Byte.SIZE];
         source.readByteArray(buf);

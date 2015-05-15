@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Wearable Pad</string>
 
+    <string name="cannot_connect_to_handheld">Can\'t connect to handheld</string>
+
     <!-- Extra Actions -->
     <string name="action_back">Back key</string>
     <string name="action_tasks">Task key</string>

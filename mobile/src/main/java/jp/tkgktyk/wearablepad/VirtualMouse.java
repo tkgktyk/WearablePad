@@ -39,7 +39,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
-import eu.chainfire.libsuperuser.Shell;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
 /**
@@ -87,6 +86,17 @@ public class VirtualMouse {
     private FileOutputStream mInputDevice;
 
     private int mScreenRotation;
+
+    private Runnable mUpdateViewLayout = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (VirtualMouse.this) {
+                if (mCursorView != null && mLayoutParams != null) {
+                    mWindowManager.updateViewLayout(mCursorView, mLayoutParams);
+                }
+            }
+        }
+    };
 
     private Point getRotatedPointForInputDevice(PointF point) {
         float x = 0.0f;
@@ -145,21 +155,21 @@ public class VirtualMouse {
         MyApp.logD("event: " + message.event + ", x: " + message.x + ", y: " + message.y);
 
         if (mInputDevice == null) {
+            MyApp.logD("mInputDevice is null");
             return;
         }
 
         ArrayList<byte[]> cmds = Lists.newArrayList();
         switch (message.getMaskedEvent()) {
             case TouchMessage.EVENT_SHOW_CURSOR:
-//                mCursorView.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mCursorView.setAlpha(1.0f);
-//                        mLayoutParams.alpha = 1.0f;
-//                        mCursorView.invalidate();
-//                        updateCursorView();
-//                    }
-//                });
+                mCursorView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        MyApp.logD();
+                        mCursorView.setAlpha(1.0f);
+                        mUpdateViewLayout.run();
+                    }
+                });
                 break;
             case TouchMessage.EVENT_START_DRAG:
                 cmds.add(makeEvent(EV_ABS, ABS_MT_TRACKING_ID, (int) System.currentTimeMillis()));
@@ -209,13 +219,13 @@ public class VirtualMouse {
             case TouchMessage.EVENT_ACTION_SYSTEM_UI:
                 switch (message.getActionValue()) {
                     case TouchMessage.SYSTEM_UI_BACK:
-                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_BACK);
+                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_BACK);
                         break;
                     case TouchMessage.SYSTEM_UI_TASKS:
-                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
+                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_APP_SWITCH);
                         break;
                     case TouchMessage.SYSTEM_UI_HOME:
-                        Shell.SU.run("input keyevent " + KeyEvent.KEYCODE_HOME);
+                        MyApp.run("input keyevent " + KeyEvent.KEYCODE_HOME);
                         break;
                     case TouchMessage.SYSTEM_UI_STATUSBAR:
                         @SuppressWarnings("ResourceType") Object sbservice
@@ -254,7 +264,7 @@ public class VirtualMouse {
                         point2.y = clamp(point1.y - mDisplaySize.y / div, mDisplaySize.y);
                         break;
                 }
-                Shell.SU.run(String.format("input swipe %d %d %d %d",
+                MyApp.run(String.format("input swipe %d %d %d %d",
                         point1.x, point1.y, point2.x, point2.y));
                 break;
         }
@@ -310,12 +320,7 @@ public class VirtualMouse {
 
     private void updateCursorView() {
         setLayoutParams();
-        mCursorView.post(new Runnable() {
-            @Override
-            public void run() {
-                mWindowManager.updateViewLayout(mCursorView, mLayoutParams);
-            }
-        });
+        mCursorView.post(mUpdateViewLayout);
     }
 
     private void setLayoutParams() {
@@ -404,8 +409,7 @@ public class VirtualMouse {
                 updateCursorView();
             }
         });
-//        mCursorView.setAlpha(0.0f);
-//        mLayoutParams.alpha = 0.0f;
+        mCursorView.setAlpha(0.0f);
         mWindowManager.addView(mCursorView, mLayoutParams);
     }
 
@@ -427,6 +431,7 @@ public class VirtualMouse {
         try {
             mInputDevice = new FileOutputStream(mSettings.device);
         } catch (IOException e) {
+            MyApp.showToast(R.string.cannot_access_input_subsystem);
             e.printStackTrace();
         }
     }

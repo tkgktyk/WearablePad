@@ -142,6 +142,7 @@ public class BluetoothReceiverService extends Service {
                             }
                             Context context = BluetoothReceiverService.this;
                             mVirtualMouse = new VirtualMouse(context, new Settings(context));
+                            mVirtualMouse.onMessageReceived(new TouchMessage(TouchMessage.EVENT_SHOW_CURSOR));
                             break;
                         }
                         case BluetoothHelper.STATE_CONNECTING:
