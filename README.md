@@ -45,8 +45,8 @@ If cannot be divided as percent, round down to the nearest decimal percent.
 **IMPORTANT:**
 Tap and longpress to exit Wearable Pad or perform extra actions.
 
-![pad](wear/images/screenshot_pad.png)
-![action](wear/images/screenshot_action.png)
+![pad](images/screenshot_pad.png)
+![action](images/screenshot_action.png)
 
 ### For v0.2.0 or later
 |Phone/Tablet|Wear||
