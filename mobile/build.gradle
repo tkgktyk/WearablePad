@@ -7,12 +7,8 @@ android {
         applicationId "jp.tkgktyk.wearablepad"
         minSdkVersion 18
         targetSdkVersion 22
-        versionCode 6
-        versionName '0.3.1'
-
-        ndk {
-            moduleName "NativeMethod"
-        }
+        versionCode 7
+        versionName '0.4.0'
     }
     buildTypes {
         release {
@@ -27,9 +23,7 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     wearApp project(':wear')
-    compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.google.android.gms:play-services:7.3.0'
-    compile 'com.jakewharton:butterknife:5.1.1'
-    compile 'com.google.guava:guava:18.0'
     compile project(':lib')
+    compile project(':rlib')
 }

@@ -20,6 +20,7 @@ import android.content.pm.ApplicationInfo;
 import android.preference.PreferenceManager;
 
 import jp.tkgktyk.wearablepadlib.BaseApplication;
+import jp.tkgktyk.wearablepadrlib.VirtualMouse;
 
 /**
  * Created by tkgktyk on 2015/05/02.

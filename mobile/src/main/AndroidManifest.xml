@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
@@ -17,7 +16,7 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"/>
-        <activity android:name=".MainActivity">
+        <activity android:name=".SettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -31,16 +30,5 @@
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
             </intent-filter>
         </service>
-        <service
-            android:name=".BluetoothReceiverService"/>
-
-        <receiver android:name=".BootCompleteReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-        </receiver>
-        <service android:name=".PrepareInputSubsystemIntentService"/>
     </application>
-
 </manifest>

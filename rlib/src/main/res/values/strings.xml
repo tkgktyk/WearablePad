@@ -1,0 +1,55 @@
+<!--
+  ~ Copyright 2015 Takagi Katsuyuki
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+    <!-- Virtual Mouse -->
+    <string name="cannot_execute_su">Can\'t execute su</string>
+    <string name="cannot_access_input_subsystem">Can\'t access Input Subsystem</string>
+
+    <!-- Settings -->
+    <string name="current_s1">Current: %1$s</string>
+    <string name="not_selected">Not selected</string>
+    <string name="unit_percent">%</string>
+    <string name="none">None</string>
+
+    <!-- Input Subsystem -->
+    <string name="category_input_subsystem">Input Subsystem</string>
+    <string name="title_input_subsystem">Select</string>
+    <!-- Input Device Ratio -->
+    <string name="title_input_subsystem_ratio_x">Ratio X</string>
+    <string name="title_input_subsystem_ratio_y">Ratio Y</string>
+    <string name="note_input_subsystem_ratio">The unit is percent(%).</string>
+
+    <!-- Cursor -->
+    <string name="category_cursor">Cursor</string>
+    <!-- Cursor Speed -->
+    <string name="title_cursor_speed">Speed</string>
+    <string name="note_cursor_speed">The unit is percent(%).</string>
+
+    <!-- Transfer Mode -->
+    <string name="category_transfer_mode">Transfer Mode</string>
+    <!-- Enable Transfer -->
+    <string name="title_transfer_mode_transfer_enabled">Enable Transfer</string>
+    <!-- Destination -->
+    <string name="title_transfer_mode_destination">Destination</string>
+    <!-- Enable Receiver -->
+    <string name="title_transfer_mode_receiver_enabled">Enable Receiver</string>
+
+    <!-- Information -->
+    <string name="category_information">Information</string>
+    <!-- About -->
+    <string name="title_about">About</string>
+</resources>

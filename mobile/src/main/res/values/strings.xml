@@ -1,50 +1,13 @@
 <resources>
     <string name="app_name">Wearable Pad</string>
 
+    <string name="note_transfer_mode_destination">Pair devices at first</string>
+
     <!-- Service -->
-    <string name="cannot_execute_su">Can\'t execute su</string>
-    <string name="cannot_access_input_subsystem">Can\'t access Input Subsystem</string>
     <string name="transfer">Transfer</string>
     <string name="start_transfer_service">Start transfer service</string>
-    <string name="receiver">Receiver</string>
-    <string name="start_receiver_service">Start receiver service</string>
     <string name="not_connected">Not connected</string>
     <string name="connecting">Connecting</string>
     <string name="connected_to_s1">Connected to %1$s</string>
-    <string name="connected_from_s1">Connected from %1$s</string>
 
-    <!-- Settings -->
-    <string name="current_s1">Current: %1$s</string>
-    <string name="not_selected">Not selected</string>
-    <string name="unit_percent">%</string>
-    <string name="none">None</string>
-
-    <!-- Input Subsystem -->
-    <string name="category_input_subsystem">Input Subsystem</string>
-    <string name="title_input_subsystem">Select</string>
-    <!-- Input Device Ratio -->
-    <string name="title_input_subsystem_ratio_x">Ratio X</string>
-    <string name="title_input_subsystem_ratio_y">Ratio Y</string>
-    <string name="note_input_subsystem_ratio">The unit is percent(%).</string>
-
-    <!-- Cursor -->
-    <string name="category_cursor">Cursor</string>
-    <!-- Cursor Speed -->
-    <string name="title_cursor_speed">Speed</string>
-    <string name="note_cursor_speed">The unit is percent(%).</string>
-
-    <!-- Transfer Mode -->
-    <string name="category_transfer_mode">Transfer Mode</string>
-    <!-- Enable Transfer -->
-    <string name="title_transfer_mode_transfer_enabled">Enable Transfer</string>
-    <!-- Destination -->
-    <string name="title_transfer_mode_destination">Destination</string>
-    <string name="note_transfer_mode_destination">Pair devices at first</string>
-    <!-- Enable Receiver -->
-    <string name="title_transfer_mode_receiver_enabled">Enable Receiver</string>
-
-    <!-- Information -->
-    <string name="category_information">Information</string>
-    <!-- About -->
-    <string name="title_about">About</string>
 </resources>

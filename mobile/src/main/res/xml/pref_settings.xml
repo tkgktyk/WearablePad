@@ -42,20 +42,14 @@
     <PreferenceCategory
         android:title="@string/category_transfer_mode">
         <!-- Enable Transfer -->
-        <jp.tkgktyk.wearablepad.util.SwitchPreference
+        <jp.tkgktyk.wearablepadrlib.SwitchPreference
             android:defaultValue="false"
             android:key="@string/key_transfer_mode_transfer_enabled"
             android:title="@string/title_transfer_mode_transfer_enabled"/>
         <!-- Destination -->
         <ListPreference
-            android:dependency="@string/key_transfer_mode_transfer_enabled"
             android:key="@string/key_transfer_mode_destination"
             android:title="@string/title_transfer_mode_destination"/>
-        <!-- Enable Receiver -->
-        <jp.tkgktyk.wearablepad.util.SwitchPreference
-            android:defaultValue="false"
-            android:key="@string/key_transfer_mode_receiver_enabled"
-            android:title="@string/title_transfer_mode_receiver_enabled"/>
     </PreferenceCategory>
 
     <!-- Information -->

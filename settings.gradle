@@ -1,1 +1,1 @@
-include ':mobile', ':wear', ':lib'
+include ':mobile', ':wear', ':lib', ':receiver', ':rlib'

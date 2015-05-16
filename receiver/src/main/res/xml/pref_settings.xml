@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2015 Takagi Katsuyuki
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/category_input_subsystem">
+        <!-- Select Input Device -->
+        <ListPreference
+            android:defaultValue="@string/default_input_subsystem"
+            android:entries="@array/input_subsystems"
+            android:entryValues="@array/input_subsystems"
+            android:key="@string/key_input_subsystem"
+            android:title="@string/title_input_subsystem"/>
+        <!-- Input Device Ratio -->
+        <EditTextPreference
+            android:defaultValue="@string/default_input_subsystem_ratio_y"
+            android:dialogMessage="@string/note_input_subsystem_ratio"
+            android:inputType="number"
+            android:key="@string/key_input_subsystem_ratio_x"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_input_subsystem_ratio_x"/>
+        <EditTextPreference
+            android:defaultValue="@string/default_input_subsystem_ratio_y"
+            android:dialogMessage="@string/note_input_subsystem_ratio"
+            android:inputType="number"
+            android:key="@string/key_input_subsystem_ratio_y"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_input_subsystem_ratio_y"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/category_cursor">
+        <!-- Cursor Speed -->
+        <EditTextPreference
+            android:defaultValue="@string/default_cursor_speed"
+            android:dialogMessage="@string/note_cursor_speed"
+            android:inputType="number"
+            android:key="@string/key_cursor_speed"
+            android:selectAllOnFocus="true"
+            android:title="@string/title_cursor_speed"/>
+    </PreferenceCategory>
+
+    <!-- Transfer Mode -->
+    <PreferenceCategory
+        android:title="@string/category_transfer_mode">
+        <!-- Enable Receiver -->
+        <jp.tkgktyk.wearablepadrlib.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_transfer_mode_receiver_enabled"
+            android:title="@string/title_transfer_mode_receiver_enabled"/>
+    </PreferenceCategory>
+
+    <!-- Information -->
+    <PreferenceCategory
+        android:title="@string/category_information">
+        <!-- About -->
+        <Preference
+            android:icon="@android:drawable/ic_menu_info_details"
+            android:key="@string/key_about"
+            android:title="@string/title_about">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/tkgktyk/WearablePad/blob/master/README.md"/>
+        </Preference>
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -24,9 +24,12 @@ import android.support.annotation.StringRes;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import jp.tkgktyk.wearablepad.util.ServiceNotification;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
+import jp.tkgktyk.wearablepadrlib.BluetoothHelper;
+import jp.tkgktyk.wearablepadrlib.ServiceNotification;
+import jp.tkgktyk.wearablepadrlib.Settings;
+import jp.tkgktyk.wearablepadrlib.VirtualMouse;
 
 /**
  * Created by tkgktyk on 2015/04/27.
@@ -67,7 +70,8 @@ public class WearableService extends WearableListenerService {
 
             mBluetoothHelper.start();
             mBluetoothHelper.connect(mSettings.getTransferAddress());
-            mServiceNotification = new ServiceNotification(this, R.string.transfer);
+            mServiceNotification = new ServiceNotification(this, R.string.transfer,
+                    SettingsActivity.class);
             MyApp.showToast(R.string.start_transfer_service);
         } else {
             mVirtualMouse = new VirtualMouse(this, mSettings);
