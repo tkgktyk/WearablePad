@@ -5,7 +5,7 @@ There are some apps to control your PC from Android Wear via Android phone/table
 However I couldn't find apps to control Android phone from Android wear.
 This is just a challenge to do that.
 
-[Movie on Youtube](https://youtu.be/G9Vo8Ck-Mno)
+[Movie on Youtube](https://youtu.be/_Xd0CTNc1C8)
 
 ## Solution
 Android has Input SubSystem, /dev/input/eventX the same as Linux, processing user input from input devices including touch screen.
