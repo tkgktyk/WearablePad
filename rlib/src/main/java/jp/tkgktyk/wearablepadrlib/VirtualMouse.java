@@ -21,12 +21,10 @@ import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.os.Build;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Surface;
-import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
@@ -73,7 +71,6 @@ public class VirtualMouse {
     private static final float DEFAULT_CURSOR_POSITION = 0.5f;
 
     private Context mContext;
-    private PowerManager.WakeLock mWakeLock;
     private Settings mSettings;
 
     private PointF mCursor = new PointF();
@@ -83,7 +80,6 @@ public class VirtualMouse {
     private float mMaxDistance;
     private WindowManager mWindowManager;
     private ImageView mCursorView;
-    private Point mCursorSize = new Point();
     private WindowManager.LayoutParams mLayoutParams;
 
     private Process mSuProcess;
@@ -330,8 +326,8 @@ public class VirtualMouse {
 
     private void setLayoutParams() {
         final Point rotated = getRotatedPointForCursor(mCursor);
-        mLayoutParams.x = rotated.x - mDisplaySize.x / 2 + mCursorSize.x;
-        mLayoutParams.y = rotated.y - mDisplaySize.y / 2 + mCursorSize.y;
+        mLayoutParams.x = rotated.x - mCursorView.getWidth() / 2;
+        mLayoutParams.y = rotated.y - mCursorView.getHeight() / 2;
     }
 
     public VirtualMouse(Context context, Settings settings) {
@@ -339,8 +335,6 @@ public class VirtualMouse {
         BaseApplication.logD("onCreate");
 
         mSettings = settings;
-
-        initWakeLock();
 
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         mMaxDistance = mContext.getResources().getDisplayMetrics().density * MAX_DISTANCE;
@@ -373,51 +367,29 @@ public class VirtualMouse {
         updateCursorView();
     }
 
-    private void initWakeLock() {
-        PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(
-                PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                        PowerManager.ON_AFTER_RELEASE, "MyWakeLock");
-        mWakeLock.acquire();
-    }
-
-    private void releaseWakeLock() {
-        if (mWakeLock != null) {
-            mWakeLock.release();
-            mWakeLock = null;
-        }
-    }
-
     private void initCursorView() {
         // restore cursor position
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         mCursor.x = prefs.getFloat(KEY_LAST_CURSOR_X, DEFAULT_CURSOR_POSITION);
         mCursor.y = prefs.getFloat(KEY_LAST_CURSOR_Y, DEFAULT_CURSOR_POSITION);
         // make cursor
-        mLayoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
+        mCursorView = new ImageView(mContext);
+        mCursorView.setImageResource(android.R.drawable.ic_delete);
+        mCursorView.setAlpha(0.0f);
+        mLayoutParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED,
                 PixelFormat.TRANSLUCENT);
+        mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT;
         setLayoutParams();
-        mCursorView = new ImageView(mContext);
-        mCursorView.setImageResource(android.R.drawable.ic_delete);
-        mCursorView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-                    mCursorView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                } else {
-                    mCursorView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
-                mCursorSize.set(mCursorView.getWidth() * 0, mCursorView.getHeight() / 3);
-                updateCursorView();
-            }
-        });
-        mCursorView.setAlpha(0.0f);
         mWindowManager.addView(mCursorView, mLayoutParams);
     }
 
@@ -522,8 +494,6 @@ public class VirtualMouse {
 
         closeInputSubsystem();
         closeSuProcess();
-
-        releaseWakeLock();
     }
 
 }

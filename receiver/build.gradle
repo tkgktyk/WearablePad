@@ -21,10 +21,10 @@ android {
     buildToolsVersion "22.0.1"
     defaultConfig {
         applicationId "jp.tkgktyk.wearablepadreceiver"
-        minSdkVersion 14
+        minSdkVersion 17
         targetSdkVersion 22
-        versionCode 7
-        versionName '0.4.0'
+        versionCode 8
+        versionName '0.4.1'
     }
     buildTypes {
         release {

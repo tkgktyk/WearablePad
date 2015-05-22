@@ -20,10 +20,10 @@ android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 17
         targetSdkVersion 22
-        versionCode 7
-        versionName '0.4.0'
+        versionCode 8
+        versionName '0.4.1'
 
         ndk {
             moduleName "NativeMethod"
