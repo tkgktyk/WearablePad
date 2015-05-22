@@ -16,10 +16,10 @@
 
 package jp.tkgktyk.wearablepad;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.wearable.activity.WearableActivity;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.ImageButton;
@@ -41,7 +41,7 @@ import jp.tkgktyk.wearablepad.util.TouchpadView;
 import jp.tkgktyk.wearablepadlib.ParcelableUtil;
 import jp.tkgktyk.wearablepadlib.TouchMessage;
 
-public class MainActivity extends Activity {
+public class MainActivity extends WearableActivity {
 
     private static final int TAP_COUNT_TO_GRAB = 3;
     private static final int REQUEST_EXTRA_ACTION = 1;
@@ -182,6 +182,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
+
+        setAmbientEnabled();
 
         mRunning = true;
 
@@ -347,4 +349,5 @@ public class MainActivity extends Activity {
     private void performHapticFeedback(View view) {
         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
     }
+
 }

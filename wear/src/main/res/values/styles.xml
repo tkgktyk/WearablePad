@@ -2,8 +2,6 @@
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
         <item name="android:windowSwipeToDismiss">false</item>
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.3</item>
     </style>
     <style name="DefaultTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
     </style>

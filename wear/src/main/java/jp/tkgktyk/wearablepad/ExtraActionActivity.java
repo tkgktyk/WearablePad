@@ -16,9 +16,9 @@
 
 package jp.tkgktyk.wearablepad;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -32,7 +32,7 @@ import butterknife.OnClick;
 /**
  * Created by tkgktyk on 2015/05/02.
  */
-public class ExtraActionActivity extends Activity {
+public class ExtraActionActivity extends WearableActivity {
 
     public static final String ACTION_BACK = "back";
     public static final String ACTION_TASKS = "tasks";
@@ -85,5 +85,14 @@ public class ExtraActionActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_extra_action);
         ButterKnife.inject(this);
+
+        setAmbientEnabled();
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+
+        finish();
     }
 }
