@@ -7,6 +7,8 @@ This is just a challenge to do that.
 
 [Movie on Youtube](https://youtu.be/_Xd0CTNc1C8)
 
+[![Get it on Google Play](http://www.android.com/images/brand/get_it_on_play_logo_small.png)](https://play.google.com/store/apps/details?id=jp.tkgktyk.wearablepad)
+
 ## Solution
 Android has Input SubSystem, /dev/input/eventX the same as Linux, processing user input from input devices including touch screen.
 We can emulate user input by injecting input event to Input SubSystem, but normal user has no permissions and that is protected by SELinux.
