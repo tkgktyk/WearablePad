@@ -18,6 +18,7 @@ Therefore we need **root permission** and **changing SELinux policy**.
 Use `setenforce` or `supolicy` command.
 I referred to
 [stackoverflow:Q27496968](http://stackoverflow.com/questions/27496968/inject-touch-screen-events-android-5-0-dev-input-eventx).
+If the `supolicy` command is not available on your device, and you wish to automate changing of the SELinux policy use: [SELinuxModeChanger](https://f-droid.org/packages/com.mrbimc.selinux/) (requires root).
 
 ### Select touch screen from eventX
 Android device has some /dev/input/eventX, X is number from 0, so you need to know which eventX links to your touch screen.
