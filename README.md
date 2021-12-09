@@ -92,4 +92,4 @@ Tap and longpress to exit Wearable Pad or perform extra actions.
 |Longpress|Long-Longpress|
 
 ## Download
-[Wearable Pad APKs](https://drive.google.com/folderview?id=0B3ROJmhB_rAyflRVUkkxOW1JWWdYdmtydXdzeEdjaUt0Q25vRC1RbFlmZjZnUVlSbDdaUWs&usp=sharing)
+[Wearable Pad APKs](https://drive.google.com/drive/folders/0B3ROJmhB_rAyflRVUkkxOW1JWWdYdmtydXdzeEdjaUt0Q25vRC1RbFlmZjZnUVlSbDdaUWs?resourcekey=0-3sJtyB9zsUUbtrEd3M9fsA&usp=sharing)
